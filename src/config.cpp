@@ -284,11 +284,9 @@ static void initAPRIL() {
             log_err("Create APRIL failed for dataset S.");
             exit(-1);
         }
+
         success_text_with_time("Finished in ", g_timer);
     }
-
-    // AprilDataT *aprilData = (AprilDataT*) g_config.pipeline.iFilterData;
-    // todo: verify that APRIL data files exist on disk
 
     // load APRIL from disk
     g_timer = clock();
@@ -299,6 +297,9 @@ static void initAPRIL() {
     // setup filter (same april config for both datasets)
     // todo: extend to allow different april configs for R and S
     APRIL::setupAPRILIntermediateFilter(&g_config.queryData);
+
+    // set forwarding function for mbr -> intermediate filter
+    two_layer::registerForwardingFunction(&APRIL::intermediateFilterEntrypoint);
 
     success_text("APRIL intermediate filter set.");
 }
@@ -333,10 +334,25 @@ void initConfig() {
     }
 
     // initialize refinement, if enabled
-    // todo: offset maps
     if (g_config.pipeline.RefinementEnabled) {
-
+        // setup refinement
+        spatial_lib::setupRefinement(g_config.queryData);
+       
+        switch(g_config.pipeline.iFilterType) {
+            case spatial_lib::AT_NONE:
+                // set refinement after MBR filter
+                two_layer::registerForwardingFunction(&spatial_lib::refinementEntrypoint);
+                break;
+            case spatial_lib::AT_APRIL:
+                // register refinement function intermediate filter -> refinement
+                APRIL::registerRefinementFunction(&spatial_lib::refine);
+                break;
+            default:
+                break;
+        }
     }
-    
+    // reset query output
+    spatial_lib::resetQueryOutput();
+
     success_text("Init Done!");
 }

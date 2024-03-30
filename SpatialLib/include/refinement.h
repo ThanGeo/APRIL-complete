@@ -5,8 +5,21 @@
 
 namespace spatial_lib 
 {
-    int refineIntersection(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS);
-    int refineWithin(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS);
+    void setupRefinement(QueryT &query);
+
+    /**
+     * Entrypoint function for when there is NO intermediate filter.
+     * Intermediate filters forward to refine() function and NOT this one.
+    */
+    void refinementEntrypoint(uint idR, uint idS);
+
+    /**
+     * Loads geometries and refines based on setup configuration.
+     * Difference with refineEntrypoint function is that this function does not collect statistics apart
+     * from the true hits after the refinement.
+    */
+    void refine(uint idR, uint idS);
+
 }
 
 #endif

@@ -21,6 +21,7 @@ set(SrcFiles
   src/storage.cpp
   src/join.cpp
   src/utils.cpp
+  src/topology.cpp
 )
 
 # find boost

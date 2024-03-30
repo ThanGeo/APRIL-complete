@@ -4,12 +4,14 @@
 
 void printResults() {
     spatial_lib::g_queryOutput.queryResults += spatial_lib::g_queryOutput.trueHits;
-    printf("Query Results - %d pairs.\n", spatial_lib::g_queryOutput.queryResults);
     printf("Filter Breakdown:\n");
     printf("- True Hits:\t\t %0.2f%\n", spatial_lib::g_queryOutput.trueHits / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100);
     printf("- True Negatives:\t %0.2f%\n", spatial_lib::g_queryOutput.trueNegatives / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100);
     printf("- Inconclusive:\t\t %0.2f%\n", spatial_lib::g_queryOutput.refinementCandidates / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100);
-    printf("Total Time: %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime);
+    printf("\n");
+    printf("Total Time     :\t %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime);
+    printf("Post MBR filter:\t %d pairs.\n", spatial_lib::g_queryOutput.postMBRFilterCandidates);
+    printf("Query Results  :\t %d pairs.\n", spatial_lib::g_queryOutput.queryResults);
 }
 
 void freeMemory() {
@@ -32,12 +34,6 @@ int main(int argc, char *argv[]) {
 
     // init
     initConfig();
-
-    // set forwarding function for mbr -> intermediate filter
-    two_layer::registerForwardingFunction(&APRIL::intermediateFilterEntrypoint);
-
-    // reset query output
-    spatial_lib::resetQueryOutput();
 
     // begin evaluation
     g_timer = clock();
