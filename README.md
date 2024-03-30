@@ -24,9 +24,9 @@ Inside build/ directory, the executable 'main' is program executable.
 
 ## Run
 - -c : creates the APRIL approximations for the input datasets.
-- -R <keyword> : sets as the R input dataset, the dataset indicated by the keyword (see configuration files)
-- -S <keyword> : sets as the S input dataset, the dataset indicated by the keyword (see configuration files)
-- -q <query type> : sets the query type. Query types include:
+- -R "<keyword>" : sets as the R input dataset, the dataset indicated by the keyword (see configuration files)
+- -S "<keyword>" : sets as the S input dataset, the dataset indicated by the keyword (see configuration files)
+- -q "<query type>" : sets the query type. Query types include:
 - - intersection_join : intersection between polygons. (SOON: polygon-linestring)
 - - within_join : containment between polygons (R inside S). (SOON: linestring in polygon)
 
