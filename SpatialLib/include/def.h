@@ -25,9 +25,28 @@ namespace spatial_lib
         INCONCLUSIVE,
     } QueryResultT;
 
+    typedef enum TopologyRelation {
+        TR_DISJOINT,
+        TR_EQUAL,
+        TR_INSIDE,
+        TR_CONTAINS,
+        TR_MEET,
+        TR_COVERS,
+        TR_COVERED_BY,
+        TR_INTERSECTS,
+        // specific refinement cases
+        REFINE_CONTAIN_PLUS = 1000,
+        REFINE_INSIDE_PLUS,
+        REFINE_CONTAINMENT_ONLY,
+        REFINE_NO_CONTAINMENT,
+        REFINE_ALL_NO_EQUAL,        
+    } TopologyRelationE;
+
     typedef struct QueryOutput {
         // result
         int queryResults;
+        // topology relations results
+        std::unordered_map<int,uint> topologyRelationsResultMap;
         // statistics
         int postMBRFilterCandidates;
         int refinementCandidates;
@@ -93,6 +112,14 @@ namespace spatial_lib
         std::vector<uint> intervalsFULL;
     }AprilDataT;
 
+    typedef enum IntervalListsRelationship {
+        IL_DISJOINT,        // no containment, no intersection
+        IL_INTERSECT,       // no containment, yes intersection
+        IL_R_INSIDE_S,
+        IL_S_INSIDE_R,
+        IL_MATCH,           // match == symmetrical containment
+    } IntervalListsRelationshipE;
+
     /**
      * APRIL CONFIGURATION
     */
@@ -149,6 +176,7 @@ namespace spatial_lib
     void resetQueryOutput();
     void countAPRILResult(int result);
     void countResult();
+    void countTopologyRelationResult(int relation);
 
     AprilDataT createEmptyAprilDataObject();
     void addAprilDataToApproximationDataMap(DatasetT &dataset, uint recID, AprilDataT aprilData);
@@ -156,7 +184,7 @@ namespace spatial_lib
 
 
     std::unordered_map<uint,unsigned long> loadOffsetMap(std::string &offsetMapPath);
-    spatial_lib::bg_polygon* loadPolygonFromDiskBoostGeometry(uint recID, std::ifstream &fin, std::unordered_map<uint,unsigned long> &offsetMap);
+    spatial_lib::bg_polygon loadPolygonFromDiskBoostGeometry(uint recID, std::ifstream &fin, std::unordered_map<uint,unsigned long> &offsetMap);
 }
 
 #endif

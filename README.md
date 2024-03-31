@@ -30,6 +30,7 @@ Inside build/ directory, the executable 'main' is program executable.
 - -q "query type" : sets the query type. Query types include:
 - - intersection_join : intersection between polygons. (SOON: polygon-linestring)
 - - within_join : containment between polygons (R inside S). (SOON: linestring in polygon)
+- - find_relation : detects topological relations between polygons (SOON: polygon-linestring)
 
 
 ## Configuration Files

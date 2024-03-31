@@ -6,6 +6,7 @@
 
 #include "utils.h"
 #include "join.h"
+#include "topology.h"
 
 namespace APRIL
 {

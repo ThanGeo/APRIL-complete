@@ -7,6 +7,15 @@ namespace spatial_lib
     void resetQueryOutput() {
         // result
         g_queryOutput.queryResults = 0;
+        // topology relations results
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_DISJOINT, 0));
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_EQUAL, 0));
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_MEET, 0));
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_CONTAINS, 0));
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_COVERS, 0));
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_COVERED_BY, 0));
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_INSIDE, 0));
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_INTERSECTS, 0));
         // statistics
         g_queryOutput.postMBRFilterCandidates = 0;
         g_queryOutput.refinementCandidates = 0;
@@ -17,6 +26,8 @@ namespace spatial_lib
         g_queryOutput.mbrFilterTime = 0;
         g_queryOutput.intermediateFilterTime = 0;
         g_queryOutput.refinementTime = 0;
+
+        
     }
 
     void countAPRILResult(int result) {
@@ -35,6 +46,10 @@ namespace spatial_lib
 
     void countResult(){
         g_queryOutput.queryResults += 1;
+    }
+
+    void countTopologyRelationResult(int relation) {
+        g_queryOutput.topologyRelationsResultMap[relation] += 1;
     }
     
     static void deepCopyAprilData(AprilDataT* from, AprilDataT* to) {
@@ -91,8 +106,8 @@ namespace spatial_lib
         return offset_map;
     }
 
-    spatial_lib::bg_polygon* loadPolygonFromDiskBoostGeometry(uint recID, std::ifstream &fin, std::unordered_map<uint,unsigned long> &offsetMap) {
-        spatial_lib::bg_polygon* pol = new spatial_lib::bg_polygon;
+    spatial_lib::bg_polygon loadPolygonFromDiskBoostGeometry(uint recID, std::ifstream &fin, std::unordered_map<uint,unsigned long> &offsetMap) {
+        spatial_lib::bg_polygon pol;
         int readID;
         int vertexCount, polygonCount;
         double x,y;
@@ -109,10 +124,10 @@ namespace spatial_lib
                 fin.read((char*) &x, sizeof(double));
                 fin.read((char*) &y, sizeof(double));
 
-                pol->outer().push_back(spatial_lib::bg_point_xy(x,y));
+                pol.outer().push_back(spatial_lib::bg_point_xy(x,y));
             }
         }
-        boost::geometry::correct(*pol);
+        boost::geometry::correct(pol);
         return pol;
     }
 }

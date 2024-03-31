@@ -345,7 +345,7 @@ void initConfig() {
                 break;
             case spatial_lib::AT_APRIL:
                 // register refinement function intermediate filter -> refinement
-                APRIL::registerRefinementFunction(&spatial_lib::refine);
+                APRIL::registerRefinementFunction(&spatial_lib::refineJoin);
                 break;
             default:
                 break;
