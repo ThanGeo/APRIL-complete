@@ -5,12 +5,18 @@
 */
 ConfigT g_config;
 
-static std::unordered_map<std::string, int> queryStringToIntMap = {
+static std::unordered_map<std::string, spatial_lib::QueryTypeE> queryStringToIntMap = {
     {"range",spatial_lib::RANGE},
-    {"intersection_join",spatial_lib::Q_INTERSECTION_JOIN},
-    {"within_join",spatial_lib::Q_WITHIN_JOIN},
+    {"intersect",spatial_lib::Q_INTERSECT},
+    {"inside",spatial_lib::Q_INSIDE},
+    {"disjoint",spatial_lib::Q_DISJOINT},
+    {"equal",spatial_lib::Q_EQUAL},
+    {"meet",spatial_lib::Q_MEET},
+    {"contains",spatial_lib::Q_CONTAINS},
+    {"covered_by",spatial_lib::Q_COVERED_BY},
+    {"covers",spatial_lib::Q_COVERS},
     {"find_relation",spatial_lib::Q_FIND_RELATION},
-    {"relate",spatial_lib::Q_RELATE}};
+    };
 
 static std::unordered_map<std::string, int> intermediateFilterStringToIntMap = {
     {"APRIL",spatial_lib::AT_APRIL},
@@ -74,18 +80,6 @@ static bool verifyQuery(QueryStatementT *queryStmt) {
     if (itqt == queryStringToIntMap.end()) {
         log_err("Failed when verifying query type.");
         // todo: print available query types strings
-        return false;
-    }
-    // verify number of inputs datasets
-    auto itnr = spatial_lib::queryTypeToNumberOfInputsMap.find(itqt->second);
-    if (itnr == spatial_lib::queryTypeToNumberOfInputsMap.end()) {
-        log_err("Missing query type in number of inputs map.");
-        // todo: print relevant message
-        return false;
-    }
-    if (itnr->second != queryStmt->datasetCount) {
-        log_err("Invalid number of datasets for specified query type.");
-        // todo: print relevant message
         return false;
     }
 

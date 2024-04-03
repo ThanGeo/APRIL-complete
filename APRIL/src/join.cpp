@@ -2,7 +2,7 @@
 
 namespace APRIL
 {
-    static int withinJoinIntervalLists(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2){
+    int insideJoinIntervalLists(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2){
         //they may not have any intervals of this type
         if(numintervals1 == 0 || numintervals2 == 0){
             return 0;
@@ -31,7 +31,7 @@ namespace APRIL
             if (*end1<=*end2)
             {
                 if(!intervalRcontained){
-                    //we are skipping this interval because it was never contained, so return false (not within)
+                    //we are skipping this interval because it was never contained, so return false (not inside)
                     return 0;
                 }
                 st1 += 2;
@@ -109,49 +109,6 @@ namespace APRIL
         return 0;
     }
 
-    //join two uncompressed APRIL approximations for intersection
-    int intersectionJoinAPRILUncompressed(spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS){
-        //check ALL - ALL
-        if(!intersectionJoinIntervalLists(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL)){
-            //guaranteed not hit
-            return spatial_lib::TRUE_NEGATIVE;
-        }
-        //check ALL - FULL
-        if(aprilS->numIntervalsFULL > 0){
-            if(intersectionJoinIntervalLists(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL)){
-                //hit
-                return spatial_lib::TRUE_HIT;
-            }
-        }
-        //check FULL - ALL
-        if(aprilR->numIntervalsFULL){
-            if(intersectionJoinIntervalLists(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsALL, aprilS->numIntervalsALL)){
-                //hit
-                return spatial_lib::TRUE_HIT;
-            }
-        }
-        //send to refinement
-        return spatial_lib::INCONCLUSIVE;
-    }
-
-    //join two uncompressed APRIL approximations for within (R in S)
-    int withinJoinAPRILUncompressed(spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS){
-        //check ALL - ALL
-        if(!intersectionJoinIntervalLists(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL)){
-            //guaranteed not hit
-            return spatial_lib::TRUE_NEGATIVE;
-        }
-
-        //check ALL - F (if all intervals in R_ALL are inside any intervals of S_FULL)
-        if(aprilS->numIntervalsFULL){
-            if(withinJoinIntervalLists(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL)){
-                //hit
-                return spatial_lib::TRUE_HIT;
-            }
-        }
-        //send to refinement
-        return spatial_lib::INCONCLUSIVE; 
-    }
 
     int joinIntervalListsSymmetrical(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2) {
         bool intersect = false;

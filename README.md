@@ -28,9 +28,15 @@ Inside build/ directory, the executable 'main' is program executable.
 - -R "keyword" : sets as the R input dataset, the dataset indicated by the keyword (see configuration files)
 - -S "keyword" : sets as the S input dataset, the dataset indicated by the keyword (see configuration files)
 - -q "query type" : sets the query type. Query types include:
-- - intersection_join : intersection between polygons. (SOON: polygon-linestring)
-- - within_join : containment between polygons (R inside S). (SOON: linestring in polygon)
-- - find_relation : detects topological relations between polygons (SOON: polygon-linestring)
+- - disjoint : r and s are disjoint
+- - intersect : r and s intersect
+- - inside : r is inside s
+- - contains : r contains s
+- - covered_by : r is covered by s
+- - covers : r covers s
+- - meet : r and s meet (touch)
+- - equal : r and s are geometrically equal
+- - find_relation : detect all relations between r and s
 
 
 ## Configuration Files
@@ -46,3 +52,4 @@ Then, input the new dataset in main in the following way:
 ```
 ./main -q <query_type> -R <my R dataset keyword> -S <my S dataset keyword>
 ```
+Datasets must have an offset map specified for faster refinement (TODO: add generation of offset map)

@@ -21,19 +21,44 @@ namespace spatial_lib
     */
     void refineIntersectionJoin(uint idR, uint idS);
     /**
-     * loads boost geometries and refines for within
+     * loads boost geometries and refines for inside
     */
-    void refineWithinJoin(uint idR, uint idS);
+    void refineInsideJoin(uint idR, uint idS);
 
     /**
      * Loads geometries and refines for topology based on setup configuration.
     */
-    void refineTopology(uint idR, uint idS);
+    void refineFindRelationJoin(uint idR, uint idS);
 
     /**
      * refinement for the EQUAl topology relation
     */
-    bool refineEqual(uint idR, uint idS);
+    void refineEqualJoin(uint idR, uint idS);
+
+    /**
+     * refinement for the DISJOINT topology relation
+    */
+    void refineDisjointJoin(uint idR, uint idS);
+
+    /**
+     * refinement for the MEET topology relation
+    */
+    void refineMeetJoin(uint idR, uint idS);
+
+    /**
+     * refinement for the CONTAINS topology relation
+    */
+    void refineContainsJoin(uint idR, uint idS);
+
+    /**
+     * refinement for the COVERS topology relation
+    */
+    void refineCoversJoin(uint idR, uint idS);
+
+    /**
+     * refinement for the COVERED BY topology relation
+    */
+    void refineCoveredByJoin(uint idR, uint idS);
 
     /**
      * refinement for the DISJOINT, MEET or INTERSECT topology relations
@@ -57,6 +82,10 @@ namespace spatial_lib
     */
     int refineInsidePlus(uint idR, uint idS);
 
+    /**
+     * refine for EQUAl for APRIL
+     */
+    bool isEqual(uint idR, uint idS);
 
     /**
      * refines for ALL relations except EQUAL

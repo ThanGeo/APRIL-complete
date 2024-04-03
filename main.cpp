@@ -13,8 +13,14 @@ void printResults() {
     printf("Refinement Candidates:\t %d pairs (%0.2f%).\n", spatial_lib::g_queryOutput.refinementCandidates, spatial_lib::g_queryOutput.refinementCandidates / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100);
     printf("\n");
     switch (g_config.queryData.type) {
-        case spatial_lib::Q_INTERSECTION_JOIN:
-        case spatial_lib::Q_WITHIN_JOIN:
+        case spatial_lib::Q_INTERSECT:
+        case spatial_lib::Q_INSIDE:
+        case spatial_lib::Q_EQUAL:
+        case spatial_lib::Q_MEET:
+        case spatial_lib::Q_CONTAINS:
+        case spatial_lib::Q_COVERED_BY:
+        case spatial_lib::Q_COVERS:
+        case spatial_lib::Q_DISJOINT:
             printf("Filter Breakdown:\n");
             printf("- True Hits:\t\t %0.2f%\n", spatial_lib::g_queryOutput.trueHits / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100);
             printf("- True Negatives:\t %0.2f%\n", spatial_lib::g_queryOutput.trueNegatives / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100);

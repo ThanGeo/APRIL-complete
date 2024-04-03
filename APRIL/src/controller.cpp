@@ -6,16 +6,11 @@ namespace APRIL
      * GLOBALS
     */
     spatial_lib::QueryT* g_query;
-    // pipeline functions set at runtime by configuration
-    // void (*april_query_function_ptr)(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS);
-    // int (*april_filter_function_ptr)(spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS);
-
-    // void (*refinement_gateway_ptr)(uint idR, uint idS);
 
     /************************************************/
     static void APRILIntersectionFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
         // use APRIL intermediate filter
-        int iFilterResult = intersectionJoinAPRILUncompressed(aprilR, aprilS);
+        int iFilterResult = intersectionAPRILUncompressed(aprilR, aprilS);
         // count result
         spatial_lib::countAPRILResult(iFilterResult);
         if (iFilterResult != spatial_lib::INCONCLUSIVE) {
@@ -31,9 +26,9 @@ namespace APRIL
         spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
     }
 
-    static void APRILWithinFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
+    static void APRILInsideFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
         // use APRIL intermediate filter
-        int iFilterResult = withinJoinAPRILUncompressed(aprilR, aprilS);
+        int iFilterResult = insideAPRILUncompressed(aprilR, aprilS);
         // count result
         spatial_lib::countAPRILResult(iFilterResult);
         if (iFilterResult != spatial_lib::INCONCLUSIVE) {
@@ -45,9 +40,118 @@ namespace APRIL
 
         // refinement
         spatial_lib::time::markRefinementFilterTimer();
-        spatial_lib::refineWithinJoin(idR, idS);
+        spatial_lib::refineInsideJoin(idR, idS);
         spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
     }
+
+    static void APRILDisjointFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
+        // use APRIL intermediate filter
+        int iFilterResult = disjointAPRILUncompressed(aprilR, aprilS);
+        // count result
+        spatial_lib::countAPRILResult(iFilterResult);
+        if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+            // true negative or true hit, return
+            return;
+        }
+        // i filter ended
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+
+        // refinement
+        spatial_lib::time::markRefinementFilterTimer();
+        spatial_lib::refineDisjointJoin(idR, idS);
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+    }
+
+    static void APRILEqualFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
+        // use APRIL intermediate filter
+        int iFilterResult = equalAPRILUncompressed(aprilR, aprilS);
+        // count result
+        spatial_lib::countAPRILResult(iFilterResult);
+        if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+            // true negative or true hit, return
+            return;
+        }
+        // i filter ended
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+
+        // refinement
+        spatial_lib::time::markRefinementFilterTimer();
+        spatial_lib::refineEqualJoin(idR, idS);
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+    }
+
+    static void APRILMeetFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
+        // use APRIL intermediate filter
+        int iFilterResult = meetAPRILUncompressed(aprilR, aprilS);
+        // count result
+        spatial_lib::countAPRILResult(iFilterResult);
+        if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+            // true negative or true hit, return
+            return;
+        }
+        // i filter ended
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+
+        // refinement
+        spatial_lib::time::markRefinementFilterTimer();
+        spatial_lib::refineMeetJoin(idR, idS);
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+    }
+
+    static void APRILContainsFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
+        // use APRIL intermediate filter
+        int iFilterResult = containsAPRILUncompressed(aprilR, aprilS);
+        // count result
+        spatial_lib::countAPRILResult(iFilterResult);
+        if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+            // true negative or true hit, return
+            return;
+        }
+        // i filter ended
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+
+        // refinement
+        spatial_lib::time::markRefinementFilterTimer();
+        spatial_lib::refineContainsJoin(idR, idS);
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+    }
+
+    static void APRILCoversFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
+        // use APRIL intermediate filter
+        int iFilterResult = coversAPRILUncompressed(aprilR, aprilS);
+        // count result
+        spatial_lib::countAPRILResult(iFilterResult);
+        if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+            // true negative or true hit, return
+            return;
+        }
+        // i filter ended
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+
+        // refinement
+        spatial_lib::time::markRefinementFilterTimer();
+        spatial_lib::refineCoversJoin(idR, idS);
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+    }
+
+    static void APRILCoveredByFilter(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
+        // use APRIL intermediate filter
+        int iFilterResult = coveredByAPRILUncompressed(aprilR, aprilS);
+        // count result
+        spatial_lib::countAPRILResult(iFilterResult);
+        if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+            // true negative or true hit, return
+            return;
+        }
+        // i filter ended
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+
+        // refinement
+        spatial_lib::time::markRefinementFilterTimer();
+        spatial_lib::refineCoveredByJoin(idR, idS);
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+    }
+
 
     void APRILFindTopology(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
         // use APRIL intermediate filter
@@ -132,11 +236,29 @@ namespace APRIL
         // use appropriate query function
 
         switch (g_query->type) {
-            case spatial_lib::Q_INTERSECTION_JOIN:
+            case spatial_lib::Q_INTERSECT:
                 APRILIntersectionFilter(idR, idS, aprilR, aprilS);
                 break;
-            case spatial_lib::Q_WITHIN_JOIN:
-                APRILWithinFilter(idR, idS, aprilR, aprilS);
+            case spatial_lib::Q_INSIDE:
+                APRILInsideFilter(idR, idS, aprilR, aprilS);
+                break;
+            case spatial_lib::Q_DISJOINT:
+                APRILDisjointFilter(idR, idS, aprilR, aprilS);
+                break;
+            case spatial_lib::Q_EQUAL:
+                APRILEqualFilter(idR, idS, aprilR, aprilS);
+                break;
+            case spatial_lib::Q_MEET:
+                APRILMeetFilter(idR, idS, aprilR, aprilS);
+                break;
+            case spatial_lib::Q_CONTAINS:
+                APRILContainsFilter(idR, idS, aprilR, aprilS);
+                break;
+            case spatial_lib::Q_COVERS:
+                APRILCoversFilter(idR, idS, aprilR, aprilS);
+                break;
+            case spatial_lib::Q_COVERED_BY:   
+                APRILCoveredByFilter(idR, idS, aprilR, aprilS);
                 break;
             case spatial_lib::Q_FIND_RELATION:
                 APRILFindTopology(idR, idS, aprilR, aprilS);

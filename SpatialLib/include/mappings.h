@@ -5,8 +5,6 @@
 
 namespace spatial_lib 
 {
-    extern std::unordered_map<int,int> queryTypeToNumberOfInputsMap;
-
     std::string queryTypeIntToText(int val);
 
     std::string dataTypeIntToText(int val);

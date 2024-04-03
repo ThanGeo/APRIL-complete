@@ -39,10 +39,15 @@ namespace spatial_lib
 
     typedef enum QueryType{
         RANGE,
-        Q_INTERSECTION_JOIN,
-        Q_WITHIN_JOIN,
+        Q_INTERSECT,
+        Q_INSIDE,
+        Q_DISJOINT,
+        Q_EQUAL,
+        Q_MEET,
+        Q_CONTAINS,
+        Q_COVERS,
+        Q_COVERED_BY,
         Q_FIND_RELATION,    // find what type of topological relation is there
-        Q_RELATE,           // check for a specific relation
     }QueryTypeE;
 
     typedef struct Dataset{

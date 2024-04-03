@@ -127,13 +127,12 @@ namespace two_layer
     }
 
     void setNextStage(spatial_lib::IntermediateFilterTypeE iFilterType) {
-        fs_2d::g_iFilterType = iFilterType;
+        g_iFilterType = iFilterType;
     }
 
 
     unsigned long long evaluateTwoLayer() {
-        // return fs_2d::single::ForwardScanBased_PlaneSweep_CNT_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
-        return fs_2d::single::sweepY::oneArray::ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+        return ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
     }
 
 

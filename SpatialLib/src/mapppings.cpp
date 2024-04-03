@@ -2,20 +2,11 @@
 
 namespace spatial_lib
 {
-    std::unordered_map<int,int> queryTypeToNumberOfInputsMap = {
-        {spatial_lib::RANGE, 2},
-        {spatial_lib::Q_INTERSECTION_JOIN, 2},
-        {spatial_lib::Q_WITHIN_JOIN, 2},
-        {spatial_lib::Q_FIND_RELATION, 2},
-        {spatial_lib::Q_RELATE, 2}
-        };
-
     std::string queryTypeIntToText(int val){
         switch(val) {
-            case spatial_lib::Q_INTERSECTION_JOIN: return "INTERSECTION_JOIN";
-            case spatial_lib::Q_WITHIN_JOIN: return "WITHIN_JOIN";
-            case spatial_lib::Q_FIND_RELATION: return "FIND_RELATION";
-            case spatial_lib::Q_RELATE: return "RELATE";
+            case spatial_lib::Q_INTERSECT: return "intersect";
+            case spatial_lib::Q_INSIDE: return "inside";
+            case spatial_lib::Q_FIND_RELATION: return "find_relation";
         }
     }
 

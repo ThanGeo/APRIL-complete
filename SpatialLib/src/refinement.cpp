@@ -26,8 +26,8 @@ namespace spatial_lib
     char intersectCode4[] = "****T****";
 
     //define topological masks for refinement
-    // a within b
-    boost::geometry::de9im::mask withinMask(insideCode); 
+    // a inside b
+    boost::geometry::de9im::mask insideMask(insideCode); 
     // a contains b
     boost::geometry::de9im::mask containsMask(containsCode); 
     // a covered by b
@@ -67,13 +67,46 @@ namespace spatial_lib
     QueryTypeE g_queryType;
 
 
+    /**
+     * Boost geometry refinement for specific relations
+     */
+
     static int refineIntersection(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
         return boost::geometry::intersects(*polygonR, *polygonS);
     }
 
-    static int refineWithin(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
+    static int refineInside(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
         return boost::geometry::within(*polygonR, *polygonS);
     }
+
+    static int refineContains(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
+        return boost::geometry::within(*polygonS, *polygonR);
+    }
+
+    static int refineDisjoint(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
+        return boost::geometry::disjoint(*polygonR, *polygonS);
+    }
+
+    static int refineEqual(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
+        return boost::geometry::equals(*polygonR, *polygonS);
+    }
+
+    static int refineMeet(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
+        return boost::geometry::touches(*polygonR, *polygonS);
+    }
+
+    static int refineCovers(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
+        return boost::geometry::covered_by(*polygonS, *polygonR);
+    }
+
+    static int refineCoveredBy(spatial_lib::bg_polygon *polygonR, spatial_lib::bg_polygon *polygonS){
+        return boost::geometry::covered_by(*polygonR, *polygonS);
+    }
+
+    /**
+     * Boost geometry refinement for find relation
+     */
+
 
     static inline bool compareDe9imChars(char character, char char_mask) {
         if (character != 'F' && char_mask == 'T') {
@@ -135,7 +168,7 @@ namespace spatial_lib
 
         // covered by
         if(compareMasks(code, coveredbyCode1) || compareMasks(code, coveredbyCode2) || compareMasks(code, coveredbyCode3)|| compareMasks(code, coveredbyCode4)){
-            // first check within because it is a subset of covered by
+            // first check inside because it is a subset of covered by
             if(compareMasks(code, insideCode)){
                 return TR_INSIDE;
             }
@@ -153,29 +186,9 @@ namespace spatial_lib
         return TR_INTERSECTS;
     }
 
-    void refinementEntrypoint(uint idR, uint idS) {
-        // time
-        spatial_lib::time::markRefinementFilterTimer();
-        // count post mbr candidate
-        spatial_lib::g_queryOutput.postMBRFilterCandidates += 1;
-        spatial_lib::g_queryOutput.refinementCandidates += 1;
-        
-        switch(g_queryType) {
-            case Q_INTERSECTION_JOIN:
-                refineIntersectionJoin(idR, idS);
-                break;
-
-            case Q_WITHIN_JOIN:
-                refineWithinJoin(idR, idS);
-                break;
-            
-            case Q_FIND_RELATION:
-                refineTopology(idR, idS);
-                break;
-        }
-        // store time
-        g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
-    }
+    /**
+     * Refine find specific relation
+     */
 
     void refineIntersectionJoin(uint idR, uint idS) {
         spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
@@ -189,19 +202,102 @@ namespace spatial_lib
         }
     }
 
-    void refineWithinJoin(uint idR, uint idS) {
+    void refineInsideJoin(uint idR, uint idS) {
         spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
         spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
         
         // refine
-        int refinementResult = refineWithin(&boostPolygonR, &boostPolygonS);
+        int refinementResult = refineInside(&boostPolygonR, &boostPolygonS);
         // count result
         if (refinementResult) {
             spatial_lib::countResult();
         }
     }
 
-    void refineTopology(uint idR, uint idS) {
+    void refineDisjointJoin(uint idR, uint idS) {
+        spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+        
+        // refine
+        int refinementResult = refineDisjoint(&boostPolygonR, &boostPolygonS);
+        // count result
+        if (refinementResult) {
+            spatial_lib::countResult();
+        }
+    }
+
+    void refineEqualJoin(uint idR, uint idS) {
+        // load boost polygons
+        spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        // refine
+        int refinementResult = refineEqual(&boostPolygonR, &boostPolygonS);
+        // count result
+        if (refinementResult) {
+            spatial_lib::countResult();
+        }
+    }
+
+    void refineMeetJoin(uint idR, uint idS) {
+        // load boost polygons
+        spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        // refine
+        int refinementResult = refineMeet(&boostPolygonR, &boostPolygonS);
+        // count result
+        if (refinementResult) {
+            spatial_lib::countResult();
+        }
+    }
+
+    void refineContainsJoin(uint idR, uint idS) {
+        // load boost polygons
+        spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        // refine
+        int refinementResult = refineContains(&boostPolygonR, &boostPolygonS);
+        // count result
+        if (refinementResult) {
+            spatial_lib::countResult();
+        }
+    }
+
+    void refineCoversJoin(uint idR, uint idS) {
+        // load boost polygons
+        spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        // refine
+        int refinementResult = refineCovers(&boostPolygonR, &boostPolygonS);
+        // count result
+        if (refinementResult) {
+            spatial_lib::countResult();
+        }
+    }
+
+    void refineCoveredByJoin(uint idR, uint idS) {
+        // load boost polygons
+        spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        // refine
+        int refinementResult = refineCoveredBy(&boostPolygonR, &boostPolygonS);
+        // count result
+        if (refinementResult) {
+            spatial_lib::countResult();
+        }
+    }
+
+
+
+    /**
+     * Find Relation
+     */
+
+    void refineFindRelationJoin(uint idR, uint idS) {
         spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
         spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
         
@@ -212,21 +308,25 @@ namespace spatial_lib
         spatial_lib::countTopologyRelationResult(refinementResult);
     }
 
+    /**
+     * FOR APRIL
+     */
+
+    bool isEqual(uint idR, uint idS) {
+        // load boost polygons
+        spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        // refine
+        return refineEqual(&boostPolygonR, &boostPolygonS);
+    }
+
     int refineAllRelationsNoEqual(uint idR, uint idS) {
         spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
         spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
         
         return refineFindRelation(&boostPolygonR, &boostPolygonS, false);
     }
-
-    bool refineEqual(uint idR, uint idS) {
-        // load boost polygons
-        spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
-        spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
-
-        return boost::geometry::equals(boostPolygonR, boostPolygonS);
-    }
-
 
     int refineGuaranteedNoContainment(uint idR, uint idS) {
         // load boost polygons
@@ -253,20 +353,6 @@ namespace spatial_lib
         spatial_lib::bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
         spatial_lib::bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
 
-        // if (idR == 117844 && idS == 2174856) {
-        //     printf("polygon %d\n", idR);
-        //     for (auto it : boostPolygonR.outer()) {
-        //         printf("(%f,%f),", it.x(), it.y());
-        //     }
-        //     printf("\n");
-
-        //     printf("polygon %d\n", idS);
-        //     for (auto it : boostPolygonS.outer()) {
-        //         printf("(%f,%f),", it.x(), it.y());
-        //     }
-        //     printf("\n");
-        // }
-
         // get the mask code
 	    std::string code = createMaskCode(&boostPolygonR, &boostPolygonS);
 
@@ -288,7 +374,6 @@ namespace spatial_lib
 
         return TR_INTERSECTS;
     }
-
 
     int refineContainsPlus(uint idR, uint idS) {
         // load boost polygons
@@ -366,6 +451,51 @@ namespace spatial_lib
 
 
 
+
+    void refinementEntrypoint(uint idR, uint idS) {
+        // time
+        spatial_lib::time::markRefinementFilterTimer();
+        // count post mbr candidate
+        spatial_lib::g_queryOutput.postMBRFilterCandidates += 1;
+        spatial_lib::g_queryOutput.refinementCandidates += 1;
+        
+        switch(g_queryType) {
+            case Q_INTERSECT:
+                refineIntersectionJoin(idR, idS);
+                break;
+            case Q_INSIDE:
+                refineInsideJoin(idR, idS);
+                break;
+            case Q_DISJOINT:
+                refineDisjointJoin(idR, idS);
+                break;
+            case Q_EQUAL:
+                refineEqualJoin(idR, idS);
+                break;
+            case Q_MEET:
+                refineMeetJoin(idR, idS);
+                break;
+            case Q_CONTAINS:
+                refineContainsJoin(idR, idS);
+                break;
+            case Q_COVERS:
+                refineCoversJoin(idR, idS);
+                break;
+            case Q_COVERED_BY:
+                refineCoveredByJoin(idR, idS);
+                break;
+            case Q_FIND_RELATION:
+                refineFindRelationJoin(idR, idS);
+                break;
+
+            default:
+                fprintf(stderr, "Failed. No refinement support for query type.\n");
+                exit(-1);
+                break;
+        }
+        // store time
+        g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+    }
 
     void setupRefinement(QueryT &query){
         // open data files and keep open
