@@ -64,8 +64,7 @@ endif()
 # link all
 target_link_libraries(main ${PROJECT_NAME})
 target_link_libraries(main ${Boost_LIBRARIES})
-target_link_libraries(main SpatialLib)
 target_link_libraries(main APRIL)
-target_link_libraries(main Rasterizer)
-# !!! last
 target_link_libraries(main TwoLayerFilter)
+target_link_libraries(main SpatialLib)
+target_link_libraries(main Rasterizer)

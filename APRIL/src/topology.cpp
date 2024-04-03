@@ -20,7 +20,7 @@ namespace APRIL
                 int FF = joinIntervalsForMatch(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
                 if (FF == 1) {
                     // if full lists match, then the polygons might be EQUAL
-                    // refine directly
+                    // refine directly for equal
                     spatial_lib::g_queryOutput.refinementCandidates+=1;
                     if (spatial_lib::refineEqual(idR, idS)){
                         return spatial_lib::TR_EQUAL;

@@ -27,8 +27,9 @@
  ******************************************************************************/
 
 
-#ifndef TWO_LAYER_DEF_H_
-#define TWO_LAYER_DEF_H_
+#pragma once
+#ifndef TWO_LAYER_DEF_H
+#define TWO_LAYER_DEF_H
 
 #include <cstdio>
 #include <cstdlib>
@@ -49,7 +50,6 @@
 #include "omp.h"
 #include <functional>
 #include <array>
-#include <stdarg.h>
 using namespace std;
 
 
@@ -60,67 +60,52 @@ using namespace std;
         typedef unsigned int uint;
 #endif
 
-namespace two_layer{
+#define EPS 1e-08
 
-        //#define PROCESSING_ARGE_PLANE_SWEEP_VLDB98                          0
-        #define PROCESSING_DITTRICH_DUPLICATE_DETECTION_ICDE00                  0
-        #define PROCESSING_MINIJOINS                                            1
-        #define PROCESSING_FS_LESS                                              2
-        #define PROCESSING_FS_LESS_DECOMP                                       3
-        #define PROCESSING_FS_SORT_DECOMP                                       4
-        #define PROCESSING_FS_LESS_STORAGE                                      5     
-        #define PROCESSING_NESTED_LOOPS                                         6     
+typedef double Coord;
+typedef size_t RecordId;
 
+class Record;
+class Relation;
 
-        #define EPS 1e-08
+inline int findReferenceCell1(double x, double y, double cellExtent, int numCellsPerDimension) {
+        int xInt,yInt;
 
-        typedef double Coord;
-        typedef size_t RecordId;
+        xInt = (x + EPS)/cellExtent;
+        yInt = (y + EPS)/cellExtent;
 
-        class Record;
-        class Relation;
+        return (yInt * numCellsPerDimension + xInt);
+};
 
-        inline int findReferenceCell1(double x, double y, double cellExtent, int numCellsPerDimension) {
-                int xInt,yInt;
+class Timer{
+    private:
+        using Clock = std::chrono::high_resolution_clock;
+        Clock::time_point start_time, stop_time;
 
-                xInt = (x + EPS)/cellExtent;
-                yInt = (y + EPS)/cellExtent;
+    public:
+        Timer()
+        {
+                start();
+        }
 
-                return (yInt * numCellsPerDimension + xInt);
-        };
-
-        class Timer{
-        private:
-                using Clock = std::chrono::high_resolution_clock;
-                Clock::time_point start_time, stop_time;
-
-        public:
-                Timer()
-                {
-                        start();
-                }
-
-                void start()
-                {
-                        start_time = Clock::now();
-                }
+        void start()
+        {
+                start_time = Clock::now();
+        }
 
 
-                double getElapsedTimeInSeconds()
-                {
-                        return std::chrono::duration<double>(stop_time - start_time).count();
-                }
+        double getElapsedTimeInSeconds()
+        {
+                return std::chrono::duration<double>(stop_time - start_time).count();
+        }
 
 
-                double stop()
-                {
-                        stop_time = Clock::now();
-                        return getElapsedTimeInSeconds();
-                }
-        };
-
-
-}
+        double stop()
+        {
+                stop_time = Clock::now();
+                return getElapsedTimeInSeconds();
+        }
+};
 
 
 #endif

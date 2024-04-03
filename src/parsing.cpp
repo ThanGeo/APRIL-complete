@@ -175,7 +175,7 @@ static void parsePipelineOptions(std::string &intermediateFilterType) {
     // verify and build pipeline
     if (intermediateFilterType == "") {
         // if argument didnt specify, read from config file
-        intermediateFilterType = system_config_pt.get<std::string>("Pipeline.intermediateFilter");
+        intermediateFilterType = system_config_pt.get<std::string>("Pipeline.IntermediateFilterType");
     }
 
     if (!verifyAndBuildPipeline(system_config_pt.get<int>("Pipeline.mbrFilter"), intermediateFilterType, system_config_pt.get<int>("Pipeline.refinement"))) {

@@ -27,11 +27,12 @@
  ******************************************************************************/
 
 
-#include "../include/relation.h"
+#include "relation.h"
 
-namespace two_layer{
+namespace two_layer
+{
 
-    bool CompareByYStart(const Record& lhs, const Record& rhs)
+    inline bool CompareByYStart(const Record& lhs, const Record& rhs)
     {
         return (lhs.yStart < rhs.yStart);
     }

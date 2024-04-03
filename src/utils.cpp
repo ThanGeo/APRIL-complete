@@ -1,7 +1,5 @@
 #include "utils.h"
 
-clock_t g_timer;
-
 void log_err(char* errorText) {
     std::string errTextStr(errorText);
     std::string msg = RED "[ERROR]" NC ": " + errTextStr;
@@ -19,10 +17,10 @@ void success_text(char* text) {
     fprintf(stderr, "%s\n", msg.c_str());
 }
 
-void success_text_with_time(char* text, clock_t timer) {
+void success_text_with_time(char* text, double seconds) {
     std::string textStr(text);
     std::string msg = GREEN "[SUCCESS]" NC ": " + textStr;
-    fprintf(stderr, "%s in %0.2f seconds.\n", msg.c_str(), (clock() - timer) / (double) CLOCKS_PER_SEC);
+    fprintf(stderr, "%s in %0.2f seconds.\n", msg.c_str(), seconds);
 }
 
 void log_task(std::string text) {

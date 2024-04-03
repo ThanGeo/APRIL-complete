@@ -15,6 +15,8 @@ set(SrcFiles
   src/def.cpp
   src/refinement.cpp
   src/mapppings.cpp
+  src/data.cpp
+  src/timer.cpp
 )
 
 # supress warnings

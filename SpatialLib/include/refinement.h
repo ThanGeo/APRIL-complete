@@ -2,9 +2,12 @@
 #define SPATIAL_LIB_REFINEMENT_H
 
 #include "def.h"
+#include "timer.h"
 
 namespace spatial_lib 
 {
+    extern QueryTypeE g_queryType;
+
     void setupRefinement(QueryT &query);
 
     /**
@@ -14,11 +17,13 @@ namespace spatial_lib
     void refinementEntrypoint(uint idR, uint idS);
 
     /**
-     * Loads geometries and refines for join based on setup configuration.
-     * Difference with refineEntrypoint function is that this function does not collect statistics apart
-     * from the true hits after the refinement.
+     * loads boost geometries and refines for intersection
     */
-    void refineJoin(uint idR, uint idS);
+    void refineIntersectionJoin(uint idR, uint idS);
+    /**
+     * loads boost geometries and refines for within
+    */
+    void refineWithinJoin(uint idR, uint idS);
 
     /**
      * Loads geometries and refines for topology based on setup configuration.

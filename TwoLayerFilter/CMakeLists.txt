@@ -9,7 +9,15 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-set(ProjectType STATIC) # make STATIC or SHARED
+# supress warnings
+add_definitions(-w)
+
+set(ProjectType SHARED) # make STATIC or SHARED
+
+include_directories(SpatialLib)
+if(NOT TARGET SpatialLib)
+    add_subdirectory(SpatialLib)
+endif()
 
 set(SrcFiles
     src/relation.cpp

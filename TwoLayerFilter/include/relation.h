@@ -32,8 +32,8 @@
 
 #include "def.h"
 
-namespace two_layer{
-
+namespace two_layer
+{
 	class Record
 	{
 	public:
@@ -132,10 +132,10 @@ namespace two_layer{
 
 	};
 
-	extern bool CompareByYStart(const Record& lhs, const Record& rhs);
+	inline bool CompareByYStart(const Record& lhs, const Record& rhs);
 
 	typedef Relation Group;
 	typedef Group::const_iterator GroupIterator;
 }
 
-#endif //TWO_LAYER_RELATION_H
+#endif //_RELATION_H_

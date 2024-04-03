@@ -171,10 +171,10 @@ bool verifyAndBuildPipeline(int mbrFilterEnabled, std::string intermediateFilter
         }  
         // build
         auto it = intermediateFilterStringToIntMap.find(intermediateFilterType);
-        g_config.pipeline.iFilterType = (spatial_lib::ApproximationTypeE) it->second;
+        g_config.pipeline.iFilterType = (spatial_lib::IntermediateFilterTypeE) it->second;
     } else {
         // no filter
-        g_config.pipeline.iFilterType = spatial_lib::AT_NONE;
+        g_config.pipeline.iFilterType = spatial_lib::IF_NONE;
     }
 
     g_config.pipeline.MBRFilterEnabled = mbrFilterEnabled;
@@ -267,17 +267,17 @@ static void initAPRIL() {
         rasterizerlib::init(g_config.queryData.xMinGlobal, g_config.queryData.yMinGlobal, g_config.queryData.xMaxGlobal, g_config.queryData.yMaxGlobal);
 
         // create APRIL for R
-        g_timer = clock();
+        clock_t timer = clock();
         log_task("Creating APRIL for R...");
         bool ret = createAPRIL(g_config.queryData.R);
         if (!ret) {
             log_err("Create APRIL failed for dataset R.");
             exit(-1);
         }
-        success_text_with_time("Finished in ", g_timer);
+        success_text_with_time("Finished in ", spatial_lib::time::getElapsedTime(timer));
 
         // create APRIL for S
-        g_timer = clock();
+        timer = clock();
         log_task("Creating APRIL for S...");
         ret = createAPRIL(g_config.queryData.S);
         if (!ret) {
@@ -285,21 +285,18 @@ static void initAPRIL() {
             exit(-1);
         }
 
-        success_text_with_time("Finished in ", g_timer);
+        success_text_with_time("Finished in ", spatial_lib::time::getElapsedTime(timer));
     }
 
     // load APRIL from disk
-    g_timer = clock();
+    clock_t timer = clock();
     APRIL::loadAPRILfromDisk(g_config.queryData.R);
     APRIL::loadAPRILfromDisk(g_config.queryData.S);
-    success_text_with_time("Loaded APRIL", g_timer);
+    success_text_with_time("Loaded APRIL", spatial_lib::time::getElapsedTime(timer));
 
     // setup filter (same april config for both datasets)
     // todo: extend to allow different april configs for R and S
     APRIL::setupAPRILIntermediateFilter(&g_config.queryData);
-
-    // set forwarding function for mbr -> intermediate filter
-    two_layer::registerForwardingFunction(&APRIL::intermediateFilterEntrypoint);
 
     success_text("APRIL intermediate filter set.");
 }
@@ -309,8 +306,7 @@ void initConfig() {
     // MBR filter, if enabled
     if (g_config.pipeline.MBRFilterEnabled) {
         // load Datasets
-        two_layer::loadBinaryDataset(g_config.queryData.R.path, true);
-        two_layer::loadBinaryDataset(g_config.queryData.S.path, false);
+        two_layer::loadDatasets(g_config.queryData.R.path, g_config.queryData.S.path);
         // check bounds
         if (!g_config.queryData.boundsSet) {
             two_layer::getDatasetGlobalBounds(g_config.queryData.xMinGlobal, g_config.queryData.yMinGlobal, g_config.queryData.xMaxGlobal, g_config.queryData.yMaxGlobal);
@@ -318,15 +314,21 @@ void initConfig() {
             success_text("Calculated global bounds based on dataset bounds.");
         }
         // initialize (partitioning and sorting)
-        two_layer::init(g_config.queryData.xMinGlobal, g_config.queryData.yMinGlobal, g_config.queryData.xMaxGlobal, g_config.queryData.yMaxGlobal);
+        // two_layer::init(g_config.pipeline.iFilterType, g_config.queryData.xMinGlobal, g_config.queryData.yMinGlobal, g_config.queryData.xMaxGlobal, g_config.queryData.yMaxGlobal);
+        two_layer::initTwoLayer(1000);
     }
 
     // initialize intermediate filter, if any
     switch (g_config.pipeline.iFilterType) {
-        case spatial_lib::AT_APRIL:
+        case spatial_lib::IF_APRIL:
+            // init APRIL
             initAPRIL();
+            // set as next stage after two layer MBR filter
+            two_layer::setNextStage(spatial_lib::IF_APRIL);
             break;
-        case spatial_lib::AT_NONE:
+        case spatial_lib::IF_NONE:
+            // set refinement as next stage
+            two_layer::setNextStage(spatial_lib::IF_NONE);
             break;
         default:
             log_err("Unrecognized intermediate filter.");
@@ -337,19 +339,6 @@ void initConfig() {
     if (g_config.pipeline.RefinementEnabled) {
         // setup refinement
         spatial_lib::setupRefinement(g_config.queryData);
-       
-        switch(g_config.pipeline.iFilterType) {
-            case spatial_lib::AT_NONE:
-                // set refinement after MBR filter
-                two_layer::registerForwardingFunction(&spatial_lib::refinementEntrypoint);
-                break;
-            case spatial_lib::AT_APRIL:
-                // register refinement function intermediate filter -> refinement
-                APRIL::registerRefinementFunction(&spatial_lib::refineJoin);
-                break;
-            default:
-                break;
-        }
     }
     // reset query output
     spatial_lib::resetQueryOutput();

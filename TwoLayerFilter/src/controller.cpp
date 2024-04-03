@@ -1,41 +1,36 @@
 #include "controller.h"
 
-namespace two_layer{
-    /**
-     * GLOBAL VARIABLES
-    */
+
+namespace two_layer
+{
+    int partitionsPerDimension = 1000;
+    int runNumPartitions = partitionsPerDimension * partitionsPerDimension;
     Relation R, S, *pR, *pS;
     Relation *pRA, *pSA, *pRB, *pSB, *pRC, *pSC, *pRD, *pSD;
     size_t *pRA_size, *pSA_size, *pRB_size, *pSB_size, *pRC_size, *pSC_size, *pRD_size, *pSD_size;
     size_t *pR_size ,*pS_size;
-    int runNumPartitionsPerRelation = -1;
-    int runProcessingMethod = -1;
-    int runNumPartitions = -1; 
-    int NUM_ITERATIONS = -1;
-    bool runPlaneSweepOnX = false;;
+    vector<ABrec> *pRABdec , *pSABdec;
+    vector<Crec> *pRCdec, *pSCdec;
+    vector<Drec> *pRDdec, *pSDdec;
+    vector<Coord> *pRYEND, *pSYEND;     
 
-    /**
-     * ACCESS METHODS
-    */
-
-    /**
-     * Requirements: Datasets R and S have been loaded properly.
-     * Description: 
-     * 1. Initializes the environment for the Two-Layer filter to run.
-     * 2. Prepares the data (partitioning & sorting) for the two-layer filter.
-     * 3. Sets the global bound coordinates (return arguments)
-    */
-    void init(double minX, double minY, double maxX, double maxY) {
+    unsigned long long result = 0;
+    
+    void initTwoLayer(uint partitionsPerDimension) {
+        // get global boundaries of datasets
+        Coord minX = min(R.minX, S.minX);
+        Coord maxX = max(R.maxX, S.maxX);
+        Coord minY = min(R.minY, S.minY);
+        Coord maxY = max(R.maxY, S.maxY);
         Coord diffX = maxX - minX;
         Coord diffY = maxY - minY;
         Coord maxExtend = (diffX<diffY)?diffY:diffX;
-
         //normalize for MBR filter
         R.normalize(minX, maxX, minY, maxY, maxExtend);
-        S.normalize(minX, maxX, minY, maxY, maxExtend);  
+        S.normalize(minX, maxX, minY, maxY, maxExtend);
 
         //PREPARE MBR FILTER
-        runNumPartitions = runNumPartitionsPerRelation * runNumPartitionsPerRelation;
+        runNumPartitions = partitionsPerDimension * partitionsPerDimension;
         pRA_size = new size_t[runNumPartitions];
         pRB_size = new size_t[runNumPartitions];
         pRC_size = new size_t[runNumPartitions];
@@ -57,89 +52,50 @@ namespace two_layer{
 
         pR = new Relation[runNumPartitions];
         pS = new Relation[runNumPartitions];
-
-        // partitioning and sorting
-        PartitionTwoDimensional(R, S, pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size,runPlaneSweepOnX, runNumPartitionsPerRelation);
-        sort::oneArray::SortYStartOneArray(pR, pS, pRB_size, pSB_size, pRC_size, pSC_size , pRD_size, pSD_size, runNumPartitions);
-
+        //MBR FILTER PRE-PROCESSING (partitioning and sorting)
+        fs_2d::single::PartitionTwoDimensional(R, S, pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, partitionsPerDimension);
+        fs_2d::single::sort::oneArray::SortYStartOneArray(pR, pS, pRB_size, pSB_size, pRC_size, pSC_size , pRD_size, pSD_size, runNumPartitions);
     }
 
-    /**
-     * Description: loads a binary dataset from disk. Creates each object's MBR and saves the dataset's min/max coords as well.
-     * @input: string &datasetPath : the complete path to the binary dataset
-     * @input: bool left : true if its the left relation (R), false if its the right relation (S)
-     * @output: none
-     * @remarks: crashes if specified datapath is wrong
-    */
-    void loadBinaryDataset(string &datasetPath, bool left) {
-        if (left) {
-            // load R
-            R.load(datasetPath);
-        } else {
-            // load S
-            S.load(datasetPath);
-        }
-    }
+    void initTwoLayer(uint partitionsPerDimension, double xMin, double yMin, double xMax, double yMax) {
+        //fix the relation data space to be the same as our Hilbert data space
+        Coord minX = xMin;
+        Coord maxX = xMax;
+        Coord minY = yMin;
+        Coord maxY = yMax;
+        Coord diffX = maxX - minX;
+        Coord diffY = maxY - minY;
+        Coord maxExtend = (diffX<diffY)?diffY:diffX;
+        //normalize for MBR filter
+        R.normalize(minX, maxX, minY, maxY, maxExtend);
+        S.normalize(minX, maxX, minY, maxY, maxExtend);
 
-    void loadCSVDataset(string &datasetPath) {
-        cout << "NOT IMPLEMENTED YET" << endl;
-        exit(-1);
-    }
+        //PREPARE MBR FILTER
+        runNumPartitions = partitionsPerDimension * partitionsPerDimension;
+        pRA_size = new size_t[runNumPartitions];
+        pRB_size = new size_t[runNumPartitions];
+        pRC_size = new size_t[runNumPartitions];
+        pRD_size = new size_t[runNumPartitions];
 
-    /**
-     * Requirements: (1) Datasets R and S have been loaded properly and (2) Two-layer environment has been initialized (init()).
-     * Description: Evaluates the two-layer filter for datasets R and S.
-     * @input: none
-     * @output: total results
-    */
-    unsigned long long evaluateTwoLayer() {
-        return ForwardScanBased_PlaneSweep_CNT_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runPlaneSweepOnX, runNumPartitionsPerRelation);
-    }
+        pSA_size = new size_t[runNumPartitions];
+        pSB_size = new size_t[runNumPartitions];
+        pSC_size = new size_t[runNumPartitions];
+        pSD_size = new size_t[runNumPartitions];
 
-    /**
-     * Description: Registers a user-defined function as the forwarding function for each result pair of the filter.
-     * @input: a void function pointer with two uint arguments for the pair's identifiers (R and S, in that order). 
-     * @output: 1 for success, -1 for failure.
-    */
-    int registerForwardingFunction(void (*forwardingFuncPtr)(uint idR, uint idS)) {
-        try {
-            g_pairIdForwardingFunctionPtr = forwardingFuncPtr;
-            return 1;
-        }
-        catch (int e) {
-            cout << "Two-layer: An exception occurred during function forwarding registration. Exception Nr. " << e << '\n';
-            return -1;
-        }
-    }
+        memset(pRA_size, 0, runNumPartitions*sizeof(size_t));
+        memset(pSA_size, 0, runNumPartitions*sizeof(size_t));
+        memset(pRB_size, 0, runNumPartitions*sizeof(size_t));
+        memset(pSB_size, 0, runNumPartitions*sizeof(size_t));
+        memset(pRC_size, 0, runNumPartitions*sizeof(size_t));
+        memset(pSC_size, 0, runNumPartitions*sizeof(size_t));
+        memset(pRD_size, 0, runNumPartitions*sizeof(size_t));
+        memset(pSD_size, 0, runNumPartitions*sizeof(size_t));
 
-    /**
-     * !UNDER CONSTRUCTION!
-     * Description: Registers a user-defined function as the forwarding function for each result pair of the filter. 
-     * TODO: Accepts variadic functions to allow more customization.
-     * @input: 
-     * @output: 1 for success, -1 for failure.
-    */
-    int registerVoidForwardingFunction(void (*forwardingFuncPtr)(int count, ...)) {
-        cout << "ERROR: FUNCTION UNDER CONSTRUCTION" << endl;
-        return -1;
-        try {
-            g_pairIdForwardingVoidFunctionPtr = forwardingFuncPtr;
-            return 1;
-        }
-        catch (int e) {
-            cout << "Two-layer: An exception occurred during function forwarding registration. Exception Nr. " << e << '\n';
-            return -1;
-        }
-    }
-
-    /**
-     * Description: Sets how many partitions are used per dimension in the grid.
-     * @input: int numPartitions : number of partitions per dimension
-     * @output: none
-     * @remarks: if this is invoked after initialization, environment needs to be initialized again using init().
-    */
-    void setPartitionsNum(int numPartitions) {
-        runNumPartitionsPerRelation = numPartitions;
+        pR = new Relation[runNumPartitions];
+        pS = new Relation[runNumPartitions];
+        //MBR FILTER PRE-PROCESSING (partitioning and sorting)
+        fs_2d::single::PartitionTwoDimensional(R, S, pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, partitionsPerDimension);
+        fs_2d::single::sort::oneArray::SortYStartOneArray(pR, pS, pRB_size, pSB_size, pRC_size, pSC_size , pRD_size, pSD_size, runNumPartitions);
     }
 
     /**
@@ -153,4 +109,33 @@ namespace two_layer{
         yMax = max(R.maxY, S.maxY);
     }
 
+    void loadDatasets(std::string &Rpath, std::string &Spath) {
+        // Load inputs (creates MBRs from geometry files)
+        #pragma omp parallel sections
+        {
+            #pragma omp section
+            {
+                R.load(Rpath);
+            }
+            #pragma omp section
+            {
+                S.load(Spath);
+            }
+        }
+        cout << "R size: " << R.size() << endl;
+        cout << "S size: " << S.size() << endl;
+    }
+
+    void setNextStage(spatial_lib::IntermediateFilterTypeE iFilterType) {
+        fs_2d::g_iFilterType = iFilterType;
+    }
+
+
+    unsigned long long evaluateTwoLayer() {
+        // return fs_2d::single::ForwardScanBased_PlaneSweep_CNT_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+        return fs_2d::single::sweepY::oneArray::ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+    }
+
+
+    
 }

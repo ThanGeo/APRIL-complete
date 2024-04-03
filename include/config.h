@@ -1,7 +1,7 @@
 #ifndef MAIN_CONFIG_H
 #define MAIN_CONFIG_H
 
-#include "two-layer.h"
+#include "TwoLayer.h"
 #include "def.h"
 #include "utils.h"
 

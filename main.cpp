@@ -4,9 +4,14 @@
 
 void printResults() {
     spatial_lib::g_queryOutput.queryResults += spatial_lib::g_queryOutput.trueHits;
-    printf("Total Time     :\t %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime);
+    printf("Total Time:\t\t %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime);
+    printf("- MBR filter:\t\t %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime - (spatial_lib::g_queryOutput.iFilterTime + spatial_lib::g_queryOutput.refinementTime));
+    printf("- Intermediate filter:\t %0.4f sec.\n", spatial_lib::g_queryOutput.iFilterTime);
+    printf("- Refinement:\t\t %0.4f sec.\n", spatial_lib::g_queryOutput.refinementTime);
+    printf("\n");
     printf("Post MBR filter:\t %d pairs.\n", spatial_lib::g_queryOutput.postMBRFilterCandidates);
     printf("Refinement Candidates:\t %d pairs (%0.2f%).\n", spatial_lib::g_queryOutput.refinementCandidates, spatial_lib::g_queryOutput.refinementCandidates / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100);
+    printf("\n");
     switch (g_config.queryData.type) {
         case spatial_lib::Q_INTERSECTION_JOIN:
         case spatial_lib::Q_WITHIN_JOIN:
@@ -33,18 +38,10 @@ void printResults() {
 }
 
 void freeMemory() {
-    for (auto &it : g_config.queryData.R.aprilData) {
-        delete it.second;
-    }
-    g_config.queryData.R.aprilData.clear();
-    for (auto &it : g_config.queryData.R.aprilData) {
-        delete it.second;
-    }
     g_config.queryData.S.aprilData.clear();
 }
 
 int main(int argc, char *argv[]) {
-
     // args and configuration file
     parseArgumentsAndConfigurationFile(argc, argv);
     // print config
@@ -54,9 +51,9 @@ int main(int argc, char *argv[]) {
     initConfig();
 
     // begin evaluation
-    g_timer = clock();
-    two_layer::evaluateTwoLayer();
-    spatial_lib::g_queryOutput.totalTime = (clock() - g_timer) / (double) CLOCKS_PER_SEC;
+    clock_t timer = spatial_lib::time::getNewTimer();
+    long long totalMBRFilterResults = two_layer::evaluateTwoLayer();
+    spatial_lib::g_queryOutput.totalTime = spatial_lib::time::getElapsedTime(timer);
 
     // print results
     printResults();

@@ -21,7 +21,7 @@ typedef struct DirectoryPath {
 
 typedef struct Pipeline{
     bool MBRFilterEnabled;
-    spatial_lib::ApproximationTypeE iFilterType;
+    spatial_lib::IntermediateFilterTypeE iFilterType;
     bool RefinementEnabled;
 } PipelineT;
 

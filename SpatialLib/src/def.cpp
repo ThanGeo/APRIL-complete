@@ -24,7 +24,7 @@ namespace spatial_lib
         
         // time
         g_queryOutput.mbrFilterTime = 0;
-        g_queryOutput.intermediateFilterTime = 0;
+        g_queryOutput.iFilterTime = 0;
         g_queryOutput.refinementTime = 0;
 
         
@@ -59,24 +59,17 @@ namespace spatial_lib
         to->intervalsFULL = from->intervalsFULL;
     }
 
-    AprilDataT createEmptyAprilDataObject() {
-        AprilDataT aprilData;
-        aprilData.numIntervalsALL = 0;
-        aprilData.numIntervalsFULL = 0;
-        return aprilData;
-    }
-
     void addAprilDataToApproximationDataMap(DatasetT &dataset, uint recID, AprilDataT aprilData) {
-        AprilDataT* copyAprilData = new AprilData;
+        AprilDataT copyAprilData;
 
-        deepCopyAprilData(&aprilData, copyAprilData);
+        deepCopyAprilData(&aprilData, &copyAprilData);
         
         dataset.aprilData.insert(std::make_pair(recID, copyAprilData));
     }
 
-    AprilDataT* getAprilDataOfObject(Dataset &dataset, uint recID) {
+    AprilDataT* getAprilDataOfObjectFromDatasetMap(Dataset &dataset, uint recID) {
         if (auto it = dataset.aprilData.find(recID); it != dataset.aprilData.end()) {
-            return it->second;
+            return &it->second;
         }
         return NULL;
     }

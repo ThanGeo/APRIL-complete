@@ -26,8 +26,6 @@
 #define GREEN "\e[0;32m"
 #define NC "\e[0m"
 
-extern clock_t g_timer;
-
 std::string getDatasetNameFromPath(std::string &datasetPath);
 
 bool verifyDatasetPaths(std::string &datasetPath);
@@ -41,7 +39,7 @@ void log_err(char* errorText);
 void log_err(std::string errorText);
 void log_task(std::string text);
 void success_text(char* text);
-void success_text_with_time(char* text, clock_t timer);
+void success_text_with_time(char* text, double seconds);
 
 /**
  * builds the APRIL interval files path

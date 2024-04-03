@@ -62,7 +62,7 @@ namespace APRIL
 
             // make approximation object
             spatial_lib::AprilDataT aprilData = spatial_lib::createEmptyAprilDataObject();
-
+            
             //section
             memcpy(&sectionID, &buffer[bufferIndex], sizeof(uint));
             bufferIndex += sizeof(uint);
@@ -120,7 +120,7 @@ namespace APRIL
             bufferIndex += sizeof(uint);
 
             // fetch approximation object
-            spatial_lib::AprilDataT* aprilData = spatial_lib::getAprilDataOfObject(dataset, recID);
+            spatial_lib::AprilDataT* aprilData = spatial_lib::getAprilDataOfObjectFromDatasetMap(dataset, recID);
 
             //section
             memcpy(&sectionID, &buffer[bufferIndex], sizeof(uint));

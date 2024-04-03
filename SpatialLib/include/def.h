@@ -7,45 +7,20 @@
 #include <unordered_map>
 #include <fstream>
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/algorithms/assign.hpp>
-#include <boost/foreach.hpp>
-#include <boost/assign.hpp>
+#include "data.h"
 
 namespace spatial_lib
 {
-    // boost geometry
-    typedef boost::geometry::model::d2::point_xy<double> bg_point_xy;
-    typedef boost::geometry::model::linestring<bg_point_xy> bg_linestring;
-    typedef boost::geometry::model::polygon<bg_point_xy> bg_polygon;
-
     typedef enum QueryResult {
         TRUE_NEGATIVE,
         TRUE_HIT,
         INCONCLUSIVE,
     } QueryResultT;
 
-    typedef enum TopologyRelation {
-        TR_DISJOINT,
-        TR_EQUAL,
-        TR_INSIDE,
-        TR_CONTAINS,
-        TR_MEET,
-        TR_COVERS,
-        TR_COVERED_BY,
-        TR_INTERSECTS,
-        // specific refinement cases
-        REFINE_CONTAIN_PLUS = 1000,
-        REFINE_INSIDE_PLUS,
-        REFINE_CONTAINMENT_ONLY,
-        REFINE_NO_CONTAINMENT,
-        REFINE_ALL_NO_EQUAL,        
-    } TopologyRelationE;
-
     typedef struct QueryOutput {
-        // result
+        // for regular query rsesults
         int queryResults;
-        // topology relations results
+        // for topology relations results
         std::unordered_map<int,uint> topologyRelationsResultMap;
         // statistics
         int postMBRFilterCandidates;
@@ -55,87 +30,12 @@ namespace spatial_lib
         // times
         double totalTime;
         double mbrFilterTime;
-        double intermediateFilterTime;
+        double iFilterTime;
         double refinementTime;
     } QueryOutputT;
 
     // global query output variable
     extern QueryOutputT g_queryOutput;
-
-    typedef enum DataType{
-        DT_INVALID,
-        DT_POINT,
-        DT_LINESTRING,
-        DT_POLYGON,
-    } DataTypeE;
-
-    typedef enum DatasetTypeCombination {
-        POLYGON_POLYGON,
-        POLYGON_LINESTRING,
-    }DatasetTypeCombinationE;
-
-    typedef struct Point {
-        double x,y;
-    } PointT;
-
-    typedef struct Mbr {
-        PointT minPoint;
-        PointT maxPoint;
-    }MbrT;
-
-    typedef struct Polygon {
-        uint recID;
-        std::vector<PointT> vertices;
-    } PolygonT;
-
-    typedef struct VectorData {
-        DataTypeE type;
-        void* data;
-    } VectorDataT;
-
-    typedef enum ApproximationType{
-        AT_NONE,
-        // mine
-        AT_APRIL,
-        AT_RI,
-        // competitors
-        AT_5CCH,
-        AT_RA,
-        AT_GEOS,
-    } ApproximationTypeE;
-
-    typedef struct AprilData {
-        // APRIL data
-        uint numIntervalsALL;
-        std::vector<uint> intervalsALL;
-        uint numIntervalsFULL = 0;
-        std::vector<uint> intervalsFULL;
-    }AprilDataT;
-
-    typedef enum IntervalListsRelationship {
-        IL_DISJOINT,        // no containment, no intersection
-        IL_INTERSECT,       // no containment, yes intersection
-        IL_R_INSIDE_S,
-        IL_S_INSIDE_R,
-        IL_MATCH,           // match == symmetrical containment
-    } IntervalListsRelationshipE;
-
-    /**
-     * APRIL CONFIGURATION
-    */
-    typedef struct AprilConfig {
-        // Hilbert curve order
-        int N;
-        // cells per dimension in Hilbert grid: 2^N
-        uint cellsPerDim;
-        // compression enabled, disabled
-        bool compression;
-        // how many partitions in the data space
-        int partitions;
-        // APRIL data file paths
-        std::string ALL_intervals_path;
-        std::string FULL_intervals_path;
-    } AprilConfigT;
 
     typedef enum QueryType{
         RANGE,
@@ -159,9 +59,8 @@ namespace spatial_lib
         ApproximationTypeE approxType;
         // APRIL
         spatial_lib::AprilConfigT aprilConfig;
-        std::unordered_map<uint, spatial_lib::AprilDataT*> aprilData;       // map: recID -> april data
+        std::unordered_map<uint, spatial_lib::AprilDataT> aprilData;       // map: recID -> april data
     }DatasetT;
-
 
     typedef struct Query{
         spatial_lib::QueryTypeE type;
@@ -178,10 +77,8 @@ namespace spatial_lib
     void countResult();
     void countTopologyRelationResult(int relation);
 
-    AprilDataT createEmptyAprilDataObject();
     void addAprilDataToApproximationDataMap(DatasetT &dataset, uint recID, AprilDataT aprilData);
-    AprilDataT* getAprilDataOfObject(Dataset &dataset, uint recID);
-
+    AprilDataT* getAprilDataOfObjectFromDatasetMap(Dataset &dataset, uint recID);
 
     std::unordered_map<uint,unsigned long> loadOffsetMap(std::string &offsetMapPath);
     spatial_lib::bg_polygon loadPolygonFromDiskBoostGeometry(uint recID, std::ifstream &fin, std::unordered_map<uint,unsigned long> &offsetMap);
