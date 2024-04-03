@@ -183,7 +183,7 @@ namespace spatial_lib
         }
 
         // else return intersects
-        return TR_INTERSECTS;
+        return TR_INTERSECT;
     }
 
     /**
@@ -344,7 +344,7 @@ namespace spatial_lib
             return TR_MEET;
         }
 
-        return TR_INTERSECTS;
+        return TR_INTERSECT;
     }
 
 
@@ -372,7 +372,7 @@ namespace spatial_lib
             return TR_COVERED_BY;
         }
 
-        return TR_INTERSECTS;
+        return TR_INTERSECT;
     }
 
     int refineContainsPlus(uint idR, uint idS) {
@@ -399,7 +399,7 @@ namespace spatial_lib
             return TR_MEET;
         }
 
-        return TR_INTERSECTS;
+        return TR_INTERSECT;
     }
 
     int refineInsidePlus(uint idR, uint idS) {
@@ -426,7 +426,7 @@ namespace spatial_lib
             return TR_MEET;
         }
 
-        return TR_INTERSECTS;
+        return TR_INTERSECT;
     }
 
 

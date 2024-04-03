@@ -165,7 +165,7 @@ namespace APRIL
             case spatial_lib::TR_CONTAINS:
             case spatial_lib::TR_EQUAL:
             case spatial_lib::TR_DISJOINT:
-            case spatial_lib::TR_INTERSECTS:
+            case spatial_lib::TR_INTERSECT:
                 // result
                 spatial_lib::countTopologyRelationResult(iFilterResult);
                 // time

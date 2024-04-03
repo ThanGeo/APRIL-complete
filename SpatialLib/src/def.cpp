@@ -15,7 +15,7 @@ namespace spatial_lib
         g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_COVERS, 0));
         g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_COVERED_BY, 0));
         g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_INSIDE, 0));
-        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_INTERSECTS, 0));
+        g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_INTERSECT, 0));
         // statistics
         g_queryOutput.postMBRFilterCandidates = 0;
         g_queryOutput.refinementCandidates = 0;

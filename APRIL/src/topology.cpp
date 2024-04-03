@@ -3,7 +3,6 @@
 
 namespace APRIL 
 {
-
     int findRelationAPRILUncompressed(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
         // AA join to look for exact relationship between the lists
         int AAresult = joinIntervalListsSymmetrical(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL);
@@ -50,12 +49,10 @@ namespace APRIL
                     // intersection between ALL-FULL
                     // no true hit for containment doesnt mean NO containment
                     // refine
-                    // return spatial_lib::refineContainmentsOnly(idR, idS);
                     return spatial_lib::REFINE_CONTAINMENT_ONLY;
                 } else {
                     // AA containment + AF no intersection
                     // refine specific relations
-                    // return spatial_lib::refineInsidePlus(idR, idS);
                     return spatial_lib::REFINE_INSIDE_PLUS;
                 }
             }
@@ -77,44 +74,28 @@ namespace APRIL
                     // intersection between FULL-ALL
                     // no true hit for containment doesnt mean NO containment
                     // refine
-                    // return spatial_lib::refineContainmentsOnly(idR, idS);
                     return spatial_lib::REFINE_CONTAINMENT_ONLY;
                 } else {
                     // AA containment + FA no intersection
                     // need refinement for specific containment
-                    // return spatial_lib::refineContainsPlus(idR, idS);
                     return spatial_lib::REFINE_CONTAIN_PLUS;
                 }
             }
         } 
 
-        if (AAresult == spatial_lib::IL_INTERSECT) {
-            // NO containment in AA, but there is an intersection
-            if (aprilS->numIntervalsFULL) {
-                int AFresult = intersectionJoinIntervalLists(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
-                // printf("AF: %d\n", AFresult);
-                if (AFresult) {
-                    // TODO::::
-                    // true hit intersect, but candidate for some relations
-                    return spatial_lib::TR_INTERSECTS;
-                }
-            }
-            if (aprilR->numIntervalsFULL) {
-                int FAresult = intersectionJoinIntervalLists(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsALL, aprilS->numIntervalsALL);
-                // printf("FA: %d\n", FAresult);
-                if (FAresult) {
-                    // TODO::::
-                    // true hit intersect, but candidate for some relations
-                    return spatial_lib::TR_INTERSECTS;
-                }
-            }
-            // no containment
-            // return spatial_lib::refineGuaranteedNoContainment(idR, idS);
-            return spatial_lib::REFINE_NO_CONTAINMENT;
+        int AFresult = intersectionJoinIntervalLists(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
+        if (AFresult) {
+            // true hit intersect, but candidate for some relations
+            return spatial_lib::TR_INTERSECT;
+        }
+        
+        int FAresult = intersectionJoinIntervalLists(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsALL, aprilS->numIntervalsALL);
+        if (FAresult) {
+            // true hit intersect, but candidate for some relations
+            return spatial_lib::TR_INTERSECT;
         }
 
         // refine for all relationships
-        // return spatial_lib::refineAllRelationsNoEqual(idR, idS);
         return spatial_lib::REFINE_ALL_NO_EQUAL;
     }
 
@@ -195,13 +176,7 @@ namespace APRIL
             if (!joinIntervalsForMatch(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsFULL, aprilS->numIntervalsFULL)) {
                 return spatial_lib::TRUE_NEGATIVE;
             }
-        } else if(aprilR->numIntervalsFULL && !aprilS->numIntervalsFULL) {
-            // if only one of the two has FULL intervals, cannot be equal
-            return spatial_lib::TRUE_NEGATIVE;
-        } else if (!aprilR->numIntervalsFULL && aprilS->numIntervalsFULL) {
-            // if only one of the two has FULL intervals, cannot be equal
-            return spatial_lib::TRUE_NEGATIVE;
-        }
+        } 
         // equal candidate, refinement
         return spatial_lib::INCONCLUSIVE;
     }

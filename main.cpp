@@ -31,7 +31,7 @@ void printResults() {
         case spatial_lib::Q_FIND_RELATION:
             printf("Query Results\n");
             printf("- Disjoint  :\t\t %d\n", spatial_lib::g_queryOutput.topologyRelationsResultMap[spatial_lib::TR_DISJOINT]);
-            printf("- Intersects:\t\t %d\n", spatial_lib::g_queryOutput.topologyRelationsResultMap[spatial_lib::TR_INTERSECTS]);
+            printf("- Intersects:\t\t %d\n", spatial_lib::g_queryOutput.topologyRelationsResultMap[spatial_lib::TR_INTERSECT]);
             printf("- Meet      :\t\t %d\n", spatial_lib::g_queryOutput.topologyRelationsResultMap[spatial_lib::TR_MEET]);
             printf("- Contains  :\t\t %d\n", spatial_lib::g_queryOutput.topologyRelationsResultMap[spatial_lib::TR_CONTAINS]);
             printf("- Inside    :\t\t %d\n", spatial_lib::g_queryOutput.topologyRelationsResultMap[spatial_lib::TR_INSIDE]);
