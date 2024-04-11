@@ -4,11 +4,15 @@
 - Queries:
 - - Intersection Join
 - - Within Join
-- - SOON: Topology relations
+- - Topology relations (*find relation* and *relate* with specific topological relation queries)
 - Rasterizer:
 - - Full support to create APRIL and store on disk
 - MBR Filter:
 - - Implementation of Two-Layer filter. APRIL filter is always after the MBR Filter in the pipeline
+- APRIL Features
+- - Partitioning mechanism [1,32] for better performance
+- - SOON: compression
+- - SOON: different granularity support
 
 
 ## Build
@@ -37,6 +41,7 @@ Inside build/ directory, the executable 'main' is program executable.
 - - meet : r and s meet (touch)
 - - equal : r and s are geometrically equal
 - - find_relation : detect all relations between r and s
+- -p "num" : sets "num" partitions for the APRIL approximation
 
 
 ## Configuration Files
