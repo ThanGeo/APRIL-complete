@@ -5,7 +5,7 @@ namespace rasterizerlib
 {
     
 
-    spatial_lib::AprilDataT* generate(polygon2d &polygon, GenerateTypeE generateType) {
+    spatial_lib::AprilDataT* generate(polygon2d polygon, GenerateTypeE generateType) {
         // safety checks
         if (!g_config.lib_init) {
             log_err("lib not initialized");

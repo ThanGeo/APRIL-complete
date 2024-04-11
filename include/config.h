@@ -31,6 +31,16 @@ typedef struct QueryStatement
     double xMinGlobal, yMinGlobal, xMaxGlobal, yMaxGlobal;
 }QueryStatementT;
 
+typedef struct iFilterStatement
+{
+    std::string iFiltertypeStr = "";
+    // FOR APRIL
+    int N = -1;
+    int compression = -1;
+    int partitions = -1;
+    // FOR OTHERS
+} iFilterStatementT;
+
 void printConfig();
 
 bool verifyAndbuildQuery(QueryStatementT *queryStmt);

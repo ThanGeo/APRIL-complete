@@ -21,6 +21,18 @@ namespace two_layer
     void loadDatasets(std::string &Rpath, std::string &Spath);
 
     /**
+     * @brief adds a single MBR to the input dataset(relation)
+     * 
+     * @param left  if true add object to R (left relation), else add to S 
+     * @param recID 
+     * @param xMin 
+     * @param yMin 
+     * @param xMax 
+     * @param yMax 
+     */
+    void addObjectToDataset(bool left, uint recID, double xMin, double yMin, double xMax, double yMax);
+
+    /**
      * requires datasets to be loaded to work. Calculates global bounds based on the dataset bounds.
     */
     void initTwoLayer(uint partitionsPerDimension);

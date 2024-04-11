@@ -44,7 +44,7 @@ void printResults() {
 }
 
 void freeMemory() {
-    g_config.queryData.S.aprilData.clear();
+    
 }
 
 int main(int argc, char *argv[]) {

@@ -10,7 +10,6 @@
 
 namespace APRIL
 {
-    extern spatial_lib::AprilConfigT* g_aprilConfig;
     extern spatial_lib::QueryT* g_query;
 
     /**

@@ -11,6 +11,11 @@ void log_err(std::string errorText) {
     fprintf(stderr, "%s\n", msg.c_str());
 }
 
+void log_err_w_text(std::string errorText, std::string txt) {
+    std::string msg = RED "[ERROR]" NC ": " + errorText + ": " + txt + "\n";
+    fprintf(stderr, "%s\n", msg.c_str());
+}
+
 void success_text(char* text) {
     std::string textStr(text);
     std::string msg = GREEN "[SUCCESS]" NC ": " + textStr;
@@ -79,6 +84,7 @@ bool verifyDatasetPaths(std::string &datasetPath){
 
     // check if file exists
     if (!verifyFileExists(datasetPath)) {
+        log_err_w_text("Error verifying dataset filepath", datasetPath);
         return false;
     }
 
@@ -90,8 +96,7 @@ bool verifyFileExists(std::string &filePath) {
         fclose(file);
         return true;
     }
-    log_err("File doesnt exist on disk.");
-    printf("\tpath: %s\n", filePath.c_str());
+    log_err("File doesn't exist on disk.");
     return false;
 }
 

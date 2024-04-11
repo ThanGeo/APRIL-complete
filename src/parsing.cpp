@@ -107,25 +107,36 @@ static void parseQueryOptions(QueryStatementT *queryStmt) {
     
 }
 
-static void parseAPRILoptions() {
+static void parseAPRILoptions(iFilterStatementT *iFilterStmt) {
+    int N, compression, partitions;
     // N
-    int N = system_config_pt.get<int>("APRIL.N");
-    if (N <= 1 || N > 16) {
-        log_err("Error parsing N from config file. N has to be in [2,16].");
-        exit(-1);
+    if (iFilterStmt->N == -1) {
+        N = system_config_pt.get<int>("APRIL.N");
+        if (N <= 1 || N > 16) {
+            log_err("Error parsing N from config file. N has to be in [2,16].");
+            exit(-1);
+        }
     }
     uint cellsPerDimension = pow(2,N);
     // compression
-    int compression = system_config_pt.get<int>("APRIL.compression");
-    if (compression < 0 || compression > 1) {
-        log_err("Error parsing compression setting from config file. Has to be 0 or 1.");
-        exit(-1);
+    if (iFilterStmt->compression == -1) {
+        compression = system_config_pt.get<int>("APRIL.compression");
+        if (compression < 0 || compression > 1) {
+            log_err("Error parsing compression setting from config file. Has to be 0 or 1.");
+            exit(-1);
+        }
     }
     // partitions
-    int partitions = system_config_pt.get<int>("APRIL.partitions");
-    if (partitions <= 0 || partitions > 32) {
-        log_err("Error parsing partition setting from config file. Has to be in [1,32].");
-        exit(-1);
+    if (iFilterStmt->partitions == -1) {
+        // if not set by argument, read default from ini file
+        partitions = system_config_pt.get<int>("APRIL.partitions");
+        if (partitions <= 0 || partitions > 32) {
+            log_err("Error parsing partition setting from config file. Has to be in [1,32].");
+            exit(-1);
+        }
+    } else {
+        // set from argument 
+        partitions = iFilterStmt->partitions;
     }
 
     // set APRIL path in config
@@ -161,24 +172,24 @@ static void parseAPRILoptions() {
     g_config.queryData.S.approxType =  spatial_lib::AT_APRIL;
 }
 
-static void parseIntermediateFilterOptions() {
+static void parseIntermediateFilterOptions(iFilterStatementT *iFilterStmt) {
     switch (g_config.pipeline.iFilterType) {
         case spatial_lib::AT_APRIL:
-            parseAPRILoptions();
+            parseAPRILoptions(iFilterStmt);
             break;
         case spatial_lib::AT_NONE:
             break;
     }
 }
 
-static void parsePipelineOptions(std::string &intermediateFilterType) {
+static void parsePipelineOptions(std::string &iFilterTypeStr) {
     // verify and build pipeline
-    if (intermediateFilterType == "") {
+    if (iFilterTypeStr == "") {
         // if argument didnt specify, read from config file
-        intermediateFilterType = system_config_pt.get<std::string>("Pipeline.IntermediateFilterType");
+        iFilterTypeStr = system_config_pt.get<std::string>("Pipeline.IntermediateFilterType");
     }
 
-    if (!verifyAndBuildPipeline(system_config_pt.get<int>("Pipeline.mbrFilter"), intermediateFilterType, system_config_pt.get<int>("Pipeline.refinement"))) {
+    if (!verifyAndBuildPipeline(system_config_pt.get<int>("Pipeline.mbrFilter"), iFilterTypeStr, system_config_pt.get<int>("Pipeline.refinement"))) {
         log_err("Failed while verifying and building pipeline config");
         exit(-1);
     }
@@ -187,8 +198,7 @@ static void parsePipelineOptions(std::string &intermediateFilterType) {
 void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     char c;
     QueryStatementT queryStmt;
-    std::string intermediateFilterType;
-    bool createApproximations = false;
+    iFilterStatementT iFilterStmt;
     // check If config file does exist
     FILE *fptr = fopen(g_config.dirPaths.configFilePath.c_str(), "r");
     if (fptr == NULL) {
@@ -199,7 +209,7 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     fclose(fptr);
 
     // read arguments
-    while ((c = getopt(argc, argv, "cf:q:R:S:?")) != -1)
+    while ((c = getopt(argc, argv, "p:cf:q:R:S:?")) != -1)
     {
         switch (c)
         {
@@ -212,7 +222,7 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
                 break;   
             case 'f':
                 // Intermediate Filter Type
-                intermediateFilterType = std::string(optarg);
+                iFilterStmt.iFiltertypeStr = std::string(optarg);
                 break;
             case 'R':
                 // Dataset R path
@@ -224,6 +234,9 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
                 queryStmt.datasetPathS = std::string(optarg);
                 queryStmt.datasetCount++;
                 break;
+            case 'p':
+                iFilterStmt.partitions = atoi(optarg);
+                break;
             default:
                 exit(-1);
                 break;
@@ -234,7 +247,7 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     boost::property_tree::ini_parser::read_ini(g_config.dirPaths.datasetsConfigPath, dataset_config_pt);
 
     // parse pipeline options FIRST
-    parsePipelineOptions(intermediateFilterType);
+    parsePipelineOptions(iFilterStmt.iFiltertypeStr);
 
     // parse dataset options
     parseDatasetOptions(&queryStmt);
@@ -243,6 +256,6 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     parseQueryOptions(&queryStmt);
 
     // parse intermediate filter options
-    parseIntermediateFilterOptions();
+    parseIntermediateFilterOptions(&iFilterStmt);
 
 }

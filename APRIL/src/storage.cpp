@@ -81,7 +81,7 @@ namespace APRIL
             aprilData.intervalsALL.insert(aprilData.intervalsALL.begin(), &loadSpace32[0], loadSpace32 + loadIndex);
 
             // add to dataset map
-            spatial_lib::addAprilDataToApproximationDataMap(dataset, recID, aprilData);
+            spatial_lib::addAprilDataToApproximationDataMap(dataset, sectionID, recID, aprilData);
             
             polCounter++;
         }
@@ -119,12 +119,12 @@ namespace APRIL
             memcpy(&recID, &buffer[bufferIndex], sizeof(uint));
             bufferIndex += sizeof(uint);
 
-            // fetch approximation object
-            spatial_lib::AprilDataT* aprilData = spatial_lib::getAprilDataOfObjectFromDatasetMap(dataset, recID);
-
             //section
             memcpy(&sectionID, &buffer[bufferIndex], sizeof(uint));
             bufferIndex += sizeof(uint);
+            
+            // fetch approximation object
+            spatial_lib::AprilDataT* aprilData = spatial_lib::getAprilDataBySectionAndObjectIDs(dataset, sectionID, recID);
             
             //total intervals in polygon
             memcpy(&aprilData->numIntervalsFULL, &buffer[bufferIndex], sizeof(uint));

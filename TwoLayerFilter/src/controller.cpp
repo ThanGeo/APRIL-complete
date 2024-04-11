@@ -126,6 +126,24 @@ namespace two_layer
         cout << "S size: " << S.size() << endl;
     }
 
+    void addObjectToDataset(bool left, uint recID, double xMin, double yMin, double xMax, double yMax) {
+        if (left) {
+            // add to left relation (R)
+            R.emplace_back(recID, xMin, yMin, xMax, yMax);
+            R.minX = std::min(R.minX, xMin);
+            R.maxX = std::max(R.maxX, xMax);
+            R.minY = std::min(R.minY, yMin);
+            R.maxY = std::max(R.maxY, yMax);
+        } else {
+            // add to right relation (S)
+            S.emplace_back(recID, xMin, yMin, xMax, yMax);
+            S.minX = std::min(S.minX, xMin);
+            S.maxX = std::max(S.maxX, xMax);
+            S.minY = std::min(S.minY, yMin);
+            S.maxY = std::max(S.maxY, yMax);
+        }
+    }
+
     void setNextStage(spatial_lib::IntermediateFilterTypeE iFilterType) {
         g_iFilterType = iFilterType;
     }

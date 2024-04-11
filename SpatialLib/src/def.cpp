@@ -59,19 +59,43 @@ namespace spatial_lib
         to->intervalsFULL = from->intervalsFULL;
     }
 
-    void addAprilDataToApproximationDataMap(DatasetT &dataset, uint recID, AprilDataT aprilData) {
+    void addAprilDataToApproximationDataMap(DatasetT &dataset, uint sectionID, uint recID, AprilDataT aprilData) {
         AprilDataT copyAprilData;
 
         deepCopyAprilData(&aprilData, &copyAprilData);
         
-        dataset.aprilData.insert(std::make_pair(recID, copyAprilData));
+        // store april data
+        dataset.sectionMap[sectionID].aprilData.insert(std::make_pair(recID, copyAprilData));
+        // store mapping recID -> sectionID
+        auto it = dataset.recToSectionIdMap.find(recID);
+        if (it != dataset.recToSectionIdMap.end()) {
+            // exists
+            it->second.emplace_back(sectionID);
+        } else {
+            // doesnt exist, new entry
+            std::vector<uint> sectionIDs = {sectionID};
+            dataset.recToSectionIdMap.insert(std::make_pair(recID, sectionIDs));
+        }
+        
     }
 
-    AprilDataT* getAprilDataOfObjectFromDatasetMap(Dataset &dataset, uint recID) {
-        if (auto it = dataset.aprilData.find(recID); it != dataset.aprilData.end()) {
-            return &it->second;
+    AprilDataT* getAprilDataBySectionAndObjectIDs(Dataset &dataset, uint sectionID, uint recID) {
+        auto sec = dataset.sectionMap.find(sectionID);
+        if (sec != dataset.sectionMap.end()){
+            auto obj = sec->second.aprilData.find(recID);
+            if (obj != sec->second.aprilData.end()) {
+                return &(obj->second);
+            }
         }
-        return NULL;
+        return nullptr;
+    }
+
+    std::vector<uint> getCommonSectionIDsOfObjects(Dataset &datasetR, Dataset &datasetS, uint idR, uint idS) {
+        auto itR = datasetR.recToSectionIdMap.find(idR);
+	    auto itS = datasetS.recToSectionIdMap.find(idS);
+        std::vector<uint> commonSectionIDs;
+        set_intersection(itR->second.begin(),itR->second.end(),itS->second.begin(),itS->second.end(),back_inserter(commonSectionIDs));
+        return commonSectionIDs;
     }
 
     std::unordered_map<uint,unsigned long> loadOffsetMap(std::string &offsetMapPath){
@@ -99,8 +123,8 @@ namespace spatial_lib
         return offset_map;
     }
 
-    spatial_lib::bg_polygon loadPolygonFromDiskBoostGeometry(uint recID, std::ifstream &fin, std::unordered_map<uint,unsigned long> &offsetMap) {
-        spatial_lib::bg_polygon pol;
+    bg_polygon loadPolygonFromDiskBoostGeometry(uint recID, std::ifstream &fin, std::unordered_map<uint,unsigned long> &offsetMap) {
+        bg_polygon pol;
         int readID;
         int vertexCount, polygonCount;
         double x,y;
@@ -117,10 +141,41 @@ namespace spatial_lib
                 fin.read((char*) &x, sizeof(double));
                 fin.read((char*) &y, sizeof(double));
 
-                pol.outer().push_back(spatial_lib::bg_point_xy(x,y));
+                pol.outer().push_back(bg_point_xy(x,y));
             }
         }
         boost::geometry::correct(pol);
         return pol;
     }
+
+    SectionT* getSectionByID(DatasetT &dataset, uint sectionID) {
+        auto it = dataset.sectionMap.find(sectionID);
+        if (it == dataset.sectionMap.end()) {
+            return nullptr;
+        }
+        return &(it->second);
+    }
+
+    std::vector<SectionT*> getSectionsOfMBR(spatial_lib::DatasetT &dataset, double xMin, double yMin, double xMax, double yMax) {
+        uint i_min = (xMin - dataset.dataspaceInfo.xMinGlobal) / (dataset.dataspaceInfo.xExtent / dataset.aprilConfig.partitions);
+        uint j_min = (yMin - dataset.dataspaceInfo.yMinGlobal) / (dataset.dataspaceInfo.yExtent / dataset.aprilConfig.partitions);
+        uint i_max = (xMax - dataset.dataspaceInfo.xMinGlobal) / (dataset.dataspaceInfo.xExtent / dataset.aprilConfig.partitions);
+        uint j_max = (yMax - dataset.dataspaceInfo.yMinGlobal) / (dataset.dataspaceInfo.yExtent / dataset.aprilConfig.partitions);
+        
+        std::vector<SectionT*> sections;
+        sections.reserve((i_max-i_min) * (j_max-j_min));
+
+        for(uint i=i_min; i<=i_max; i++) {
+            for(uint j=j_min; j<=j_max; j++) {
+                uint sectionID = getSectionIDFromIdxs(i,j, dataset.aprilConfig.partitions);
+                
+                sections.emplace_back(getSectionByID(dataset, sectionID));
+
+            }
+        }
+
+        return sections;
+    }
+
+
 }

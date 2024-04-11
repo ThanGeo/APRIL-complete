@@ -24,7 +24,7 @@ namespace spatial_lib
         TR_COVERED_BY,
         TR_INTERSECT,
         // specific refinement cases
-        REFINE_CONTAIN_PLUS = 1000,
+        REFINE_CONTAINS_PLUS = 1000,
         REFINE_INSIDE_PLUS,
         REFINE_CONTAINMENT_ONLY,
         REFINE_NO_CONTAINMENT,

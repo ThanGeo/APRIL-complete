@@ -10,6 +10,8 @@ namespace spatial_lib
     std::string dataTypeIntToText(int val);
 
     DataTypeE dataTypeTextToInt(std::string val);
+
+    
 }
 
 

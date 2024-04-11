@@ -4,8 +4,9 @@
 namespace APRIL 
 {
     int findRelationAPRILUncompressed(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
+        // printf("%u,%u\n", idR, idS);
         // AA join to look for exact relationship between the lists
-        int AAresult = joinIntervalListsSymmetrical(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL);
+        int AAresult = joinIntervalListsSymmetricalOptimized(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL);
         // printf("AA: %d\n", AAresult);
         if (AAresult == spatial_lib::IL_DISJOINT) {
             // true negative
@@ -20,16 +21,16 @@ namespace APRIL
                 if (FF == 1) {
                     // if full lists match, then the polygons might be EQUAL
                     // refine directly for equal
-                    spatial_lib::g_queryOutput.refinementCandidates+=1;
                     if (spatial_lib::isEqual(idR, idS)){
+                        spatial_lib::g_queryOutput.refinementCandidates+=1;
                         return spatial_lib::TR_EQUAL;
                     }
                 }
             } else if (!aprilR->numIntervalsFULL && !aprilS->numIntervalsFULL) {
                 // if either has full, also possibly EQUAL
                 // refine directly
-                spatial_lib::g_queryOutput.refinementCandidates+=1;
                 if (spatial_lib::isEqual(idR, idS)){
+                    spatial_lib::g_queryOutput.refinementCandidates+=1;
                     return spatial_lib::TR_EQUAL;
                 }
             }
@@ -43,9 +44,7 @@ namespace APRIL
                 if (AFresult == spatial_lib::IL_R_INSIDE_S) {
                     // true hit inside
                     return spatial_lib::TR_INSIDE;
-                }
-
-                if (AFresult == spatial_lib::IL_INTERSECT) {
+                } else if (AFresult == spatial_lib::IL_INTERSECT) {
                     // intersection between ALL-FULL
                     // no true hit for containment doesnt mean NO containment
                     // refine
@@ -68,9 +67,7 @@ namespace APRIL
                 if (FAresult == spatial_lib::IL_R_INSIDE_S) {
                     // true hit contains
                     return spatial_lib::TR_CONTAINS;
-                } 
-
-                if (FAresult == spatial_lib::IL_INTERSECT) {
+                } else if (FAresult == spatial_lib::IL_INTERSECT) {
                     // intersection between FULL-ALL
                     // no true hit for containment doesnt mean NO containment
                     // refine
@@ -78,7 +75,7 @@ namespace APRIL
                 } else {
                     // AA containment + FA no intersection
                     // need refinement for specific containment
-                    return spatial_lib::REFINE_CONTAIN_PLUS;
+                    return spatial_lib::REFINE_CONTAINS_PLUS;
                 }
             }
         } 
@@ -216,6 +213,7 @@ namespace APRIL
                 return spatial_lib::TRUE_HIT;
             }
         }
+
         // inconclusive
         return spatial_lib::INCONCLUSIVE;
     }
