@@ -1,8 +1,12 @@
-#include "filter.h"
+#include "find_relation_filter.h"
 
 namespace two_layer
 {
-    
+    static double d_xmin;
+    static double d_ymin;
+    static double d_xmax;
+    static double d_ymax;
+
     static inline int myQuotient(int numer, int denom) {
         return numer/denom;
     };
@@ -12,21 +16,131 @@ namespace two_layer
         return numer%denom;
     };
 
-    inline void forwardPair(uint idR, uint idS) {
+    static inline void forwardPair(uint idR, uint idS, spatial_lib::MBRRelationCaseE relationCase) {
+        
         switch (g_iFilterType) {
             case spatial_lib::IF_APRIL:
-                APRIL::IntermediateFilterEntrypoint(idR, idS);
+                if (relationCase != spatial_lib::MBR_CROSS) {
+                    // forward to intermediate filter
+                    APRIL::IntermediateFilterFindRelationEntrypoint(idR, idS, relationCase);
+                } else {
+                    // they cross, true hit intersect (skip intermediate filter)
+                    spatial_lib::countTopologyRelationResult(spatial_lib::TR_INTERSECT);
+                    // printf("%u,%u\n", idR, idS);
+                }
                 break;
             case spatial_lib::IF_NONE:
-                // straight to refinement
-                spatial_lib::refinementEntrypoint(idR, idS);
+                // selective refinement
+                if (relationCase != spatial_lib::MBR_CROSS) {
+                    spatial_lib::refinementEntrypoint(idR, idS);
+                } else {
+                    // they cross, true hit intersect (skip intermediate filter)
+                    spatial_lib::countTopologyRelationResult(spatial_lib::TR_INTERSECT);
+                }
+
+
                 break;
             default:
                 break;
         }
     }
+
+    static inline void relateMBRs(RelationIterator &rIterator, RelationIterator &sIterator) {
+        // compute deltas
+        d_xmin = rIterator->xStart - sIterator->xStart;
+        d_ymin = rIterator->yStart - sIterator->yStart;
+        d_xmax = rIterator->xEnd - sIterator->xEnd;
+        d_ymax = rIterator->yEnd - sIterator->yEnd;
+
+        
+        // if(rIterator->id == 21101 && sIterator->id == 257975) {
+        //     printf("Deltas: %f,%f,%f,%f\n", d_xmin, d_ymin, d_xmax, d_ymax);
+        // }
+
+        // check for equality using an error margin because doubles
+        if (abs(d_xmin) < EPS) {
+            if (abs(d_xmax) < EPS) {
+                if (abs(d_ymin) < EPS) {
+                    if (abs(d_ymax) < EPS) {
+                        // equal MBRs
+                        forwardPair(rIterator->id, sIterator->id, spatial_lib::MBR_EQUAL);
+                        return;
+                    }
+                }
+            }
+        }
+        // not equal MBRs, check other relations
+        if (d_xmin <= 0) {
+            if (d_xmax >= 0) {
+                if (d_ymin <= 0) {
+                    if (d_ymax >= 0) {
+                        // MBR(s) inside MBR(r)
+                        forwardPair(rIterator->id, sIterator->id, spatial_lib::MBR_S_IN_R);
+                        return;
+                    }
+                } else {
+                    if (d_ymax < 0) {
+                        // MBRs cross each other
+                        forwardPair(rIterator->id, sIterator->id, spatial_lib::MBR_CROSS);
+                        return;
+                    }
+                }
+            }
+        } 
+        if (d_xmin >= 0) {
+            if (d_xmax <= 0) {
+                if (d_ymin >= 0) {
+                    if (d_ymax <= 0) {
+                        // MBR(r) inside MBR(s)
+                        forwardPair(rIterator->id, sIterator->id, spatial_lib::MBR_R_IN_S);
+                        return;
+                    }
+                } else {
+                    if (d_ymax > 0) {
+                        // MBRs cross each other
+                        forwardPair(rIterator->id, sIterator->id, spatial_lib::MBR_CROSS);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // MBRs intersect generally
+        forwardPair(rIterator->id, sIterator->id, spatial_lib::MBR_INTERSECT);
+    }
     
-    inline unsigned long long InternalLoop_Rolled_CNT_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/,int flag)
+    static inline unsigned long long InternalLoop_Rolled_CNT_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/,int flag)
+    {
+        unsigned long long result = 0;
+        auto pivot = firstFS;
+
+        while ((pivot < lastFS) && (rec->yEnd >= pivot->yStart))
+        {   
+            // disjoint, skip
+            if ((rec->xStart > pivot->xEnd) || (rec->xEnd < pivot->xStart))
+            {
+                pivot++;
+                continue;
+            }
+
+            // relate the MBRs for their specific relationship
+            if(flag == 0){
+                // rec is R, pivot is S
+                relateMBRs(rec, pivot);
+            } else {
+                // pivot is R, rec is S
+                relateMBRs(pivot, rec);
+            }
+
+            result++;
+            pivot++;
+        }
+
+        return result;
+    };
+    
+    
+    static inline unsigned long long InternalLoop_Rolled_CNT_V2_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
     {
         unsigned long long result = 0;
         auto pivot = firstFS;
@@ -38,11 +152,13 @@ namespace two_layer
                 pivot++;
                 continue;
             }
-            // forward pair
+            // relate the MBRs for their specific relationship
             if(flag == 0){
-                forwardPair(rec->id, pivot->id);
-            }else{
-                forwardPair(pivot->id, rec->id);
+                // rec is R, pivot is S
+                relateMBRs(rec, pivot);
+            } else {
+                // pivot is R, rec is S
+                relateMBRs(pivot, rec);
             }
             result++;
             pivot++;
@@ -52,33 +168,7 @@ namespace two_layer
     };
     
     
-    inline unsigned long long InternalLoop_Rolled_CNT_V2_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
-    {
-        unsigned long long result = 0;
-        auto pivot = firstFS;
-
-        while ((pivot < lastFS) && (rec->yEnd >= pivot->yStart))
-        {
-            if ((rec->xStart > pivot->xEnd) || (rec->xEnd < pivot->xStart))
-            {
-                pivot++;
-                continue;
-            }
-            // forward pair
-            if(flag == 0){
-                forwardPair(rec->id, pivot->id);
-            }else{
-                forwardPair(pivot->id, rec->id);
-            }
-            result++;
-            pivot++;
-        }
-
-        return result;
-    };
-    
-    
-    inline unsigned long long InternalLoop_Rolled_CNT_V3_1_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
+    static inline unsigned long long InternalLoop_Rolled_CNT_V3_1_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
     {
         unsigned long long result = 0;
         auto pivot = firstFS;
@@ -91,11 +181,13 @@ namespace two_layer
                 continue;
             }
 
-            // forward pair
+            // relate the MBRs for their specific relationship
             if(flag == 0){
-                forwardPair(rec->id, pivot->id);
-            }else{
-                forwardPair(pivot->id, rec->id);
+                // rec is R, pivot is S
+                relateMBRs(rec, pivot);
+            } else {
+                // pivot is R, rec is S
+                relateMBRs(pivot, rec);
             }
             result++;
             pivot++;
@@ -105,7 +197,7 @@ namespace two_layer
     };
     
 
-    inline unsigned long long InternalLoop_Rolled_CNT_V3_2_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
+    static inline unsigned long long InternalLoop_Rolled_CNT_V3_2_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
     {
         unsigned long long result = 0;
         auto pivot = firstFS;
@@ -117,11 +209,13 @@ namespace two_layer
                 pivot++;
                 continue;
             }
-            // forward pair
+            // relate the MBRs for their specific relationship
             if(flag == 0){
-                forwardPair(rec->id, pivot->id);
-            }else{
-                forwardPair(pivot->id, rec->id);
+                // rec is R, pivot is S
+                relateMBRs(rec, pivot);
+            } else {
+                // pivot is R, rec is S
+                relateMBRs(pivot, rec);
             }
             result++;
             pivot++;
@@ -131,7 +225,7 @@ namespace two_layer
     };
     
     
-    inline unsigned long long InternalLoop_Rolled_CNT_V4_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
+    static inline unsigned long long InternalLoop_Rolled_CNT_V4_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
     {
         unsigned long long result = 0;
         auto pivot = firstFS;
@@ -143,11 +237,13 @@ namespace two_layer
                 pivot++;
                 continue;
             }
-            // forward pair
+            // relate the MBRs for their specific relationship
             if(flag == 0){
-                forwardPair(rec->id, pivot->id);
-            }else{
-                forwardPair(pivot->id, rec->id);
+                // rec is R, pivot is S
+                relateMBRs(rec, pivot);
+            } else {
+                // pivot is R, rec is S
+                relateMBRs(pivot, rec);
             }
             result++;
             pivot++;
@@ -157,7 +253,7 @@ namespace two_layer
     };
     
     
-    inline unsigned long long InternalLoop_Rolled_CNT_V5_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
+    static inline unsigned long long InternalLoop_Rolled_CNT_V5_Y_(RelationIterator &rec, RelationIterator &firstFS, RelationIterator &lastFS/*, unsigned long long &count*/, int flag)
     {
         unsigned long long result = 0;
         auto pivot = firstFS;
@@ -169,11 +265,13 @@ namespace two_layer
                 pivot++;
                 continue;
             }
-            // forward pair
+            // relate the MBRs for their specific relationship
             if(flag == 0){
-                forwardPair(rec->id, pivot->id);
-            }else{
-                forwardPair(pivot->id, rec->id);
+                // rec is R, pivot is S
+                relateMBRs(rec, pivot);
+            } else {
+                // pivot is R, rec is S
+                relateMBRs(pivot, rec);
             }
             result++;
             pivot++;
@@ -183,7 +281,7 @@ namespace two_layer
     };
     
                     
-    inline unsigned long long Sweep_Rolled_CNT_Y_(Relation &R, Relation &S, size_t startR, size_t endR, size_t startS, size_t endS)
+    static inline unsigned long long Sweep_Rolled_CNT_Y_(Relation &R, Relation &S, size_t startR, size_t endR, size_t startS, size_t endS)
     {
         unsigned long long result = 0;
         RelationIterator r = R.begin() + startR;
@@ -213,7 +311,7 @@ namespace two_layer
     };
 
 
-    inline unsigned long long Sweep_Rolled_CNT_V2_Y_(Relation &R, Relation &S, size_t startR, size_t endR, size_t startS, size_t endS, int flag)
+    static inline unsigned long long Sweep_Rolled_CNT_V2_Y_(Relation &R, Relation &S, size_t startR, size_t endR, size_t startS, size_t endS, int flag)
     {
         unsigned long long result = 0;
         RelationIterator r = R.begin() + startR;
@@ -232,7 +330,7 @@ namespace two_layer
     };
 
 
-    inline unsigned long long Sweep_Rolled_CNT_V3_Y_(Relation &R, Relation &S, size_t startR, size_t endR, size_t startS, size_t endS, int flag)
+    static inline unsigned long long Sweep_Rolled_CNT_V3_Y_(Relation &R, Relation &S, size_t startR, size_t endR, size_t startS, size_t endS, int flag)
     {
         unsigned long long result = 0;
         RelationIterator r = R.begin() + startR;
@@ -262,7 +360,7 @@ namespace two_layer
     };
 
 
-    inline unsigned long long Sweep_Rolled_CNT_V4_Y_(Relation &R, Relation &S,size_t startR, size_t endR, size_t startS, size_t endS, int flag)
+    static inline unsigned long long Sweep_Rolled_CNT_V4_Y_(Relation &R, Relation &S,size_t startR, size_t endR, size_t startS, size_t endS, int flag)
     {
         unsigned long long result = 0;
         RelationIterator r = R.begin() + startR;
@@ -282,7 +380,7 @@ namespace two_layer
     };
 
 
-    inline unsigned long long Sweep_Rolled_CNT_V5_Y_(Relation &R, Relation &S, size_t startR, size_t endR, size_t startS, size_t endS, int flag)
+    static inline unsigned long long Sweep_Rolled_CNT_V5_Y_(Relation &R, Relation &S, size_t startR, size_t endR, size_t startS, size_t endS, int flag)
     {
         unsigned long long result = 0;
         RelationIterator r = R.begin() + startR;
@@ -301,7 +399,7 @@ namespace two_layer
         return result;
     };
 
-    unsigned long long ForwardScanBased_PlaneSweep_CNT_Y_Less(Relation *pR, Relation *pS, size_t *pRA_size, size_t *pSA_size, size_t *pRB_size, size_t *pSB_size, size_t *pRC_size, size_t *pSC_size, size_t *pRD_size, size_t *pSD_size, int runNumPartition)
+    unsigned long long FindRelationMBRFilter(Relation *pR, Relation *pS, size_t *pRA_size, size_t *pSA_size, size_t *pRB_size, size_t *pSB_size, size_t *pRC_size, size_t *pSC_size, size_t *pRD_size, size_t *pSD_size, int runNumPartition)
     {
         unsigned long long result = 0;
 
@@ -346,7 +444,5 @@ namespace two_layer
 
         return result;
     };
-
-    
    
 }

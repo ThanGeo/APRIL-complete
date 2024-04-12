@@ -20,7 +20,7 @@ typedef struct DirectoryPath {
 } DirectoryPathT;
 
 typedef struct Pipeline{
-    bool MBRFilterEnabled;
+    spatial_lib::MBRFilterTypeE MBRFilterType;
     spatial_lib::IntermediateFilterTypeE iFilterType;
     bool RefinementEnabled;
 } PipelineT;

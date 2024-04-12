@@ -152,6 +152,8 @@ namespace spatial_lib
      */
     std::vector<uint> getCommonSectionIDsOfObjects(Dataset &datasetR, Dataset &datasetS, uint idR, uint idS);
 
+
+    void printBoostPolygon(bg_polygon &polygon);
 }
 
 #endif

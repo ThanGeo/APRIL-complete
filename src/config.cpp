@@ -26,6 +26,11 @@ static std::unordered_map<std::string, int> intermediateFilterStringToIntMap = {
     {"RA",spatial_lib::AT_RA}
     };
 
+static std::unordered_map<std::string, int> mbrFilterStringToIntMap = {
+    {"INTERSECTION",spatial_lib::MBR_FT_INTERSECTION_SIMPLE},
+    {"FIND_RELATION",spatial_lib::MBR_FT_FIND_RELATION},
+    };
+
 static std::string iFilterTypeIntToText(int val){
     switch(val) {
         case spatial_lib::AT_APRIL: return "APRIL";
@@ -34,6 +39,13 @@ static std::string iFilterTypeIntToText(int val){
         case spatial_lib::AT_GEOS: return "GEOS";
         case spatial_lib::AT_RA: return "RA";
         case spatial_lib::AT_NONE: return "0";
+    }
+}
+
+static std::string mbrFilterTypeIntToText(int val){
+    switch(val) {
+        case spatial_lib::MBR_FT_INTERSECTION_SIMPLE: return "SIMPLE INTERSECTION";
+        case spatial_lib::MBR_FT_FIND_RELATION: return "FIND RELATION";
     }
 }
 
@@ -54,7 +66,7 @@ void printConfig() {
         std::cout << "\tS: " << g_config.queryData.S.path << " (" << dataTypeIntToText(g_config.queryData.S.dataType) <<  ")" << std::endl;
     }
     std::cout << "Pipeline: " << std::endl;
-    std::cout << "\tMBR Filter: " << g_config.pipeline.MBRFilterEnabled << std::endl;
+    std::cout << "\tMBR Filter: " << mbrFilterTypeIntToText(g_config.pipeline.MBRFilterType) << std::endl;
     std::cout << "\tIntermediate Filter: " << iFilterTypeIntToText(g_config.pipeline.iFilterType) << std::endl;
     std::cout << "\tRefinement: " << g_config.pipeline.RefinementEnabled << std::endl;
 
@@ -152,23 +164,40 @@ bool verifyAndbuildQuery(QueryStatementT *queryStmt) {
     return true;
 }
 
-static bool verifyPipeline(std::string intermediateFilterType) {
-    auto it = intermediateFilterStringToIntMap.find(intermediateFilterType);
-    if (it == intermediateFilterStringToIntMap.end()) {
-        log_err("Invalid selection of intermediate filter type.");
+static bool verifyPipeline(std::string mbrFilterType, std::string intermediateFilterType) {
+    auto it = mbrFilterStringToIntMap.find(mbrFilterType);
+    if (it == mbrFilterStringToIntMap.end()) {
+        log_err_w_text("Invalid selection of MBR filter type.", mbrFilterType);
         // todo: print availables
         return false;
+    }
+    if (intermediateFilterType != "") {
+        it = intermediateFilterStringToIntMap.find(intermediateFilterType);
+        if (it == intermediateFilterStringToIntMap.end()) {
+            log_err_w_text("Invalid selection of intermediate filter type.", intermediateFilterType);
+            // todo: print availables
+            return false;
+        }
     }
     return true;
 }
 
-bool verifyAndBuildPipeline(int mbrFilterEnabled, std::string intermediateFilterType, int refinementEnabled){
+bool verifyAndBuildPipeline(std::string mbrFilterType, std::string intermediateFilterType, int refinementEnabled){
+    // verify
+    if (!verifyPipeline(mbrFilterType, intermediateFilterType)) {
+        log_err("Failed when verifying pipeline config.");
+        return false;
+    }  
+    // mbr filter
+    if (mbrFilterType != "") {
+        auto it = mbrFilterStringToIntMap.find(mbrFilterType);
+        g_config.pipeline.MBRFilterType = (spatial_lib::MBRFilterTypeE) it->second;
+    } else {
+        // use default
+        g_config.pipeline.MBRFilterType = spatial_lib::MBR_FT_INTERSECTION_SIMPLE;
+    }
+    // intermediate filter
     if (intermediateFilterType != "") {
-        // verify
-        if (!verifyPipeline(intermediateFilterType)) {
-            log_err("Failed when verifying pipeline config.");
-            return false;
-        }  
         // build
         auto it = intermediateFilterStringToIntMap.find(intermediateFilterType);
         g_config.pipeline.iFilterType = (spatial_lib::IntermediateFilterTypeE) it->second;
@@ -176,8 +205,7 @@ bool verifyAndBuildPipeline(int mbrFilterEnabled, std::string intermediateFilter
         // no filter
         g_config.pipeline.iFilterType = spatial_lib::IF_NONE;
     }
-
-    g_config.pipeline.MBRFilterEnabled = mbrFilterEnabled;
+    // refinement    
     g_config.pipeline.RefinementEnabled = refinementEnabled;
 
     return true;
@@ -308,7 +336,6 @@ static void initializeSections(spatial_lib::QueryT &queryData, spatial_lib::Data
 
 static void adjustSections(spatial_lib::DatasetT &dataset, double xMin, double yMin, double xMax, double yMax) {
     std::vector<spatial_lib::SectionT*> sections = spatial_lib::getSectionsOfMBR(dataset, xMin, yMin,xMax, yMax);
-    
     for (auto &section : sections) {
         if(xMin < section->interestxMin){
             section->rasterxMin = std::min(section->rasterxMin, xMin);
@@ -421,7 +448,7 @@ static void loadDataset(std::string &filepath, bool left) {
     int polygonCount;
     int vertexCount;
     int recID;
-    Coord x,y;
+    two_layer::Coord x,y;
 
     ifstream file( filepath, fstream::in | ios_base::binary);
     if(!file)
@@ -435,11 +462,12 @@ static void loadDataset(std::string &filepath, bool left) {
     //read polygons
     for(int j=0; j<polygonCount; j++){
 
-        Coord minXmbr, minYmbr, maxXmbr, maxYmbr;
-        minXmbr = std::numeric_limits<Coord>::max();
-        maxXmbr = -std::numeric_limits<Coord>::max();
-        minYmbr = std::numeric_limits<Coord>::max();
-        maxYmbr = -std::numeric_limits<Coord>::max();
+        // printf("pol %d\n", j);
+        two_layer::Coord minXmbr, minYmbr, maxXmbr, maxYmbr;
+        minXmbr = std::numeric_limits<two_layer::Coord>::max();
+        maxXmbr = -std::numeric_limits<two_layer::Coord>::max();
+        minYmbr = std::numeric_limits<two_layer::Coord>::max();
+        maxYmbr = -std::numeric_limits<two_layer::Coord>::max();
 
         //read/write the polygon id
         file.read((char*) &recID, sizeof(int)); 
@@ -455,12 +483,13 @@ static void loadDataset(std::string &filepath, bool left) {
             maxXmbr = std::max(maxXmbr, x);
             minYmbr = std::min(minYmbr, y);
             maxYmbr = std::max(maxYmbr, y);
-            // if (recID == 59241 || recID == 1012118) {
+            
+            // if (recID == 92943 || recID == 1554694) {
             //     printf("(%f,%f),",x,y);
             // }
         }
 
-        // if (recID == 59241 || recID == 1012118) {
+        // if (recID == 92943 || recID == 1554694) {
         //     printf("\n\n");    
         // }
         // add to relation for the MBR filter
@@ -502,22 +531,27 @@ static void setupDataspace(std::string &Rfilepath, std::string &Sfilepath) {
 
 void initConfig() {
     log_task("Initializing..."); 
-    // MBR filter, if enabled
-    if (g_config.pipeline.MBRFilterEnabled) {
-        // set up the dataspace
-        setupDataspace(g_config.queryData.R.path, g_config.queryData.S.path);
+    // set up the dataspace
+    setupDataspace(g_config.queryData.R.path, g_config.queryData.S.path);
+    
+    // initialize MBR filter
+    switch(g_config.pipeline.MBRFilterType) {
         // check bounds
         if (!g_config.queryData.boundsSet) {
             two_layer::getDatasetGlobalBounds(g_config.queryData.dataspaceInfo.xMinGlobal, g_config.queryData.dataspaceInfo.yMinGlobal, g_config.queryData.dataspaceInfo.xMaxGlobal, g_config.queryData.dataspaceInfo.yMaxGlobal);
             g_config.queryData.boundsSet = true;
             success_text("Calculated global bounds based on dataset bounds.");
         }
-        // initialize (partitioning and sorting)
-        // two_layer::init(g_config.pipeline.iFilterType, g_config.queryData.xMinGlobal, g_config.queryData.yMinGlobal, g_config.queryData.xMaxGlobal, g_config.queryData.yMaxGlobal);
-        two_layer::initTwoLayer(1000);
-    } else {
-        log_err("Error: An MBR filter is mandatory but was not set.");
-        exit(-1);
+        case spatial_lib::MBR_FT_INTERSECTION_SIMPLE:
+            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_INTERSECTION_SIMPLE);
+            break;
+        case spatial_lib::MBR_FT_FIND_RELATION:
+            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_FIND_RELATION);
+            break;
+        default:
+            log_err_w_text("Invalid selection of MBR filter.", std::to_string(g_config.pipeline.MBRFilterType));
+            exit(-1);
+            break;
     }
 
     // initialize intermediate filter, if any

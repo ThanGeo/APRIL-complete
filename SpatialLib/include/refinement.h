@@ -16,6 +16,7 @@ namespace spatial_lib
     */
     void refinementEntrypoint(uint idR, uint idS);
 
+
     /**
      * loads boost geometries and refines for intersection
     */
@@ -91,6 +92,90 @@ namespace spatial_lib
      * refines for ALL relations except EQUAL
     */
     int refineAllRelationsNoEqual(uint idR, uint idS);
+
+
+    /**
+     * @brief refines for inside/covered by but is guaranteed intersection (no disjoint)
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineInsideCoveredbyTruehitIntersect(uint idR, uint idS);
+
+
+    /**
+     * @brief refines for disjoint, inside, covered by, meet and intersect
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineDisjointInsideCoveredbyMeetIntersect(uint idR, uint idS);
+
+    /**
+     * @brief refines for contains/covers but is guaranteed intersection (no disjoint)
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineContainsCoversTruehitIntersect(uint idR, uint idS);
+
+    /**
+     * @brief refines for disjoint, contains, covers, meet and intersect
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineDisjointContainsCoversMeetIntersect(uint idR, uint idS);
+
+    /**
+     * @brief refines for disjoint, meet and intersect
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineDisjointMeetIntersect(uint idR, uint idS);
+
+
+    /**
+     * @brief refines for covers/covered by but is guaranteed intersection (no disjoint)
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineCoversCoveredByTrueHitIntersect(uint idR, uint idS);
+
+    /**
+     * @brief refines for covers but is guaranteed intersection (no disjoint)
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineCoversTrueHitIntersect(uint idR, uint idS);
+
+
+    /**
+     * @brief refines for covered by but is guaranteed intersection (no disjoint)
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineCoveredbyTrueHitIntersect(uint idR, uint idS);
+
+
+
+    /**
+     * Entrypoint function for when there is NO intermediate filter.
+     * Intermediate filters forward to refine() function and NOT this one.
+    */
+    void specializedRefinementEntrypoint(uint idR, uint idS);
 
 }
 

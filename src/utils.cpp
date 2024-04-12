@@ -7,12 +7,12 @@ void log_err(char* errorText) {
 }
 
 void log_err(std::string errorText) {
-    std::string msg = RED "[ERROR]" NC ": " + errorText + "\n";
+    std::string msg = RED "[ERROR]" NC ": " + errorText;
     fprintf(stderr, "%s\n", msg.c_str());
 }
 
 void log_err_w_text(std::string errorText, std::string txt) {
-    std::string msg = RED "[ERROR]" NC ": " + errorText + ": " + txt + "\n";
+    std::string msg = RED "[ERROR]" NC ": " + errorText + ": " + txt;
     fprintf(stderr, "%s\n", msg.c_str());
 }
 
@@ -30,6 +30,11 @@ void success_text_with_time(char* text, double seconds) {
 
 void log_task(std::string text) {
     std::string msg = "[  ...  ]: " + text;
+    fprintf(stderr, "%s\n", msg.c_str());
+}
+
+void log_task_w_text(std::string text, std::string txt) {
+    std::string msg = "[  ...  ]: " + text + ": " + txt;
     fprintf(stderr, "%s\n", msg.c_str());
 }
 

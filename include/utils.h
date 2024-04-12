@@ -39,6 +39,7 @@ void log_err(char* errorText);
 void log_err(std::string errorText);
 void log_err_w_text(std::string errorText, std::string txt);
 void log_task(std::string text);
+void log_task_w_text(std::string text, std::string txt);
 void success_text(char* text);
 void success_text_with_time(char* text, double seconds);
 

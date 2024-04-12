@@ -23,6 +23,16 @@ namespace APRIL
      * 
     */
     void IntermediateFilterEntrypoint(uint idR, uint idS);
+
+
+    /**
+     * @brief Entrypoint function for the find relation intermediate filter
+     * 
+     * @param idR 
+     * @param idS 
+     * @param relationCase 
+     */
+    void IntermediateFilterFindRelationEntrypoint(uint idR, uint idS, int relationCase);
 }
 
 #endif

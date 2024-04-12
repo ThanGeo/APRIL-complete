@@ -182,14 +182,20 @@ static void parseIntermediateFilterOptions(iFilterStatementT *iFilterStmt) {
     }
 }
 
-static void parsePipelineOptions(std::string &iFilterTypeStr) {
+static void parsePipelineOptions(std::string &mbrFilterTypeStr, std::string &iFilterTypeStr) {
     // verify and build pipeline
+    // parse mbr filter type
+    if (mbrFilterTypeStr == "") {
+        // if argument didnt specify, read from config file
+        mbrFilterTypeStr = system_config_pt.get<std::string>("Pipeline.mbrFilter");
+    }
+    // parse intermediate filter type
     if (iFilterTypeStr == "") {
         // if argument didnt specify, read from config file
         iFilterTypeStr = system_config_pt.get<std::string>("Pipeline.IntermediateFilterType");
     }
 
-    if (!verifyAndBuildPipeline(system_config_pt.get<int>("Pipeline.mbrFilter"), iFilterTypeStr, system_config_pt.get<int>("Pipeline.refinement"))) {
+    if (!verifyAndBuildPipeline(mbrFilterTypeStr, iFilterTypeStr, system_config_pt.get<int>("Pipeline.refinement"))) {
         log_err("Failed while verifying and building pipeline config");
         exit(-1);
     }
@@ -199,6 +205,7 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     char c;
     QueryStatementT queryStmt;
     iFilterStatementT iFilterStmt;
+    mbrFilterStatementT mbrFilterStmt;
     // check If config file does exist
     FILE *fptr = fopen(g_config.dirPaths.configFilePath.c_str(), "r");
     if (fptr == NULL) {
@@ -209,7 +216,7 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     fclose(fptr);
 
     // read arguments
-    while ((c = getopt(argc, argv, "p:cf:q:R:S:?")) != -1)
+    while ((c = getopt(argc, argv, "m:p:cf:q:R:S:e?")) != -1)
     {
         switch (c)
         {
@@ -237,6 +244,13 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
             case 'p':
                 iFilterStmt.partitions = atoi(optarg);
                 break;
+            case 'm':
+                mbrFilterStmt.mbrFilterTypeStr = std::string(optarg);
+                mbrFilterStmt.enabled = true;
+                break;
+            case 'e':
+                g_config.actions.runExperiments = true;
+                break;
             default:
                 exit(-1);
                 break;
@@ -247,7 +261,7 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     boost::property_tree::ini_parser::read_ini(g_config.dirPaths.datasetsConfigPath, dataset_config_pt);
 
     // parse pipeline options FIRST
-    parsePipelineOptions(iFilterStmt.iFiltertypeStr);
+    parsePipelineOptions(mbrFilterStmt.mbrFilterTypeStr, iFilterStmt.iFiltertypeStr);
 
     // parse dataset options
     parseDatasetOptions(&queryStmt);

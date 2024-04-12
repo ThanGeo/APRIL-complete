@@ -47,6 +47,48 @@ namespace APRIL
      * joins two APRIL approximations to detect true negatives and inconclusive cases for COVERED BY
      */
     int coveredByAPRILUncompressed(spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS);
+
+
+
+    /**
+     * @brief if MBR(r) in MBR(s), then use this method
+     * 
+     * @param aprilR 
+     * @param aprilS 
+     * @return int 
+     */
+    int RinSContainmentAPRILUncompressed(spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS);
+
+
+
+    /**
+     * @brief if MBR(s) in MBR(r), then use this method
+     * 
+     * @param aprilR 
+     * @param aprilS 
+     * @return int 
+     */
+    int SinRContainmentAPRILUncompressed(spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS);
+
+
+    /**
+     * @brief if MBRs intersect generally, then use this method
+     * 
+     * @param aprilR 
+     * @param aprilS 
+     * @return int 
+     */
+    int MBRIntersectionAPRILUncompressed(spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS);
+
+
+    /**
+     * @brief if MBRs are equal, then use this method
+     * 
+     * @param aprilR 
+     * @param aprilS 
+     * @return int 
+     */
+    int equalMBRsAPRILUncompressed(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS);
 }
 
 

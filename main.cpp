@@ -2,8 +2,9 @@
 #include "include/config.h"
 #include "include/parsing.h"
 
-void printResults() {
+void printResults(int runTimes) {
     spatial_lib::g_queryOutput.queryResults += spatial_lib::g_queryOutput.trueHits;
+    printf("Repeats: %d\n", runTimes);
     printf("Total Time:\t\t %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime);
     printf("- MBR filter:\t\t %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime - (spatial_lib::g_queryOutput.iFilterTime + spatial_lib::g_queryOutput.refinementTime));
     printf("- Intermediate filter:\t %0.4f sec.\n", spatial_lib::g_queryOutput.iFilterTime);
@@ -56,13 +57,40 @@ int main(int argc, char *argv[]) {
     // init
     initConfig();
 
+    // if experiments option is selected, run 10 times and count average time
+    int runTimes = 1;
+    if (g_config.actions.runExperiments) {
+        runTimes = 10;
+    }
+
     // begin evaluation
-    clock_t timer = spatial_lib::time::getNewTimer();
-    long long totalMBRFilterResults = two_layer::evaluateTwoLayer();
-    spatial_lib::g_queryOutput.totalTime = spatial_lib::time::getElapsedTime(timer);
+    clock_t timer;
+    double totalTime = 0;
+    double mbrTime = 0;
+    double iFilterTime = 0;
+    double refinementTime = 0;
+    for (int i=0; i<runTimes; i++) {
+        log_task_w_text("Running iteration ", std::to_string(i+1));
+        // reset
+        spatial_lib::resetQueryOutput();
+        
+        // evaluate
+        timer = spatial_lib::time::getNewTimer();
+        long long totalMBRFilterResults = two_layer::evaluateTwoLayer();
+        totalTime += spatial_lib::time::getElapsedTime(timer);
+        mbrTime += spatial_lib::g_queryOutput.mbrFilterTime;
+        iFilterTime += spatial_lib::g_queryOutput.iFilterTime;
+        refinementTime += spatial_lib::g_queryOutput.refinementTime;
+    }
+    
+    // set average time
+    spatial_lib::g_queryOutput.totalTime = totalTime / (double) runTimes;
+    spatial_lib::g_queryOutput.mbrFilterTime = mbrTime / (double) runTimes;
+    spatial_lib::g_queryOutput.iFilterTime = iFilterTime / (double) runTimes;
+    spatial_lib::g_queryOutput.refinementTime = refinementTime / (double) runTimes;
 
     // print results
-    printResults();
+    printResults(runTimes);
 
     // free any memory
     freeMemory();

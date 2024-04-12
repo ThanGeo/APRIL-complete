@@ -9,6 +9,7 @@
 
 namespace two_layer
 {   
+
     /**
      * Sets the (xMin,yMin),(xMax,yMax) values based on the datasets R,S min/max
      * giving the total boundaries that enclose both datasets
@@ -35,7 +36,7 @@ namespace two_layer
     /**
      * requires datasets to be loaded to work. Calculates global bounds based on the dataset bounds.
     */
-    void initTwoLayer(uint partitionsPerDimension);
+    void initTwoLayer(uint partitionsPerDimension, spatial_lib::MBRFilterTypeE mbrFilterType);
 
     /**
      * requires datasets to be loaded to work. Sets hardcoded global bounds.

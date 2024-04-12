@@ -13,6 +13,15 @@ namespace spatial_lib
     typedef boost::geometry::model::linestring<bg_point_xy> bg_linestring;
     typedef boost::geometry::model::polygon<bg_point_xy> bg_polygon;
 
+    // MBR topology relations
+    typedef enum MBRRelationCase {
+        MBR_R_IN_S,
+        MBR_S_IN_R,
+        MBR_EQUAL,
+        MBR_CROSS,
+        MBR_INTERSECT,
+    } MBRRelationCaseE;
+    
     // topological
     typedef enum TopologyRelation {
         TR_DISJOINT,
@@ -30,6 +39,21 @@ namespace spatial_lib
         REFINE_NO_CONTAINMENT,
         REFINE_ALL_NO_EQUAL,
         REFINE_ALL,
+        /**
+         * @brief SPECIALIZED MBR TOPOLOGY
+         */
+        // MBR(r) inside MBR(s)
+        REFINE_INSIDE_COVEREDBY_TRUEHIT_INTERSECT = 2000,
+        REFINE_DISJOINT_INSIDE_COVEREDBY_MEET_INTERSECT,
+        // MBR(s) inside MBR(r)
+        REFINE_CONTAINS_COVERS_TRUEHIT_INTERSECT,
+        REFINE_DISJOINT_CONTAINS_COVERS_MEET_INTERSECT,
+        // MBR(r) intersects MBR(s)
+        REFINE_DISJOINT_MEET_INTERSECT,
+        // MBR(r) = MBR(s)
+        REFINE_COVEREDBY_TRUEHIT_INTERSECT,
+        REFINE_COVERS_TRUEHIT_INTERSECT,
+        REFINE_COVERS_COVEREDBY_TRUEHIT_INTERSECT,
     } TopologyRelationE;
 
     // spatial data types
@@ -84,6 +108,11 @@ namespace spatial_lib
         IF_NONE,
         IF_APRIL,
     } IntermediateFilterTypeE;
+
+    typedef enum MBRFilterType {
+            MBR_FT_INTERSECTION_SIMPLE,
+            MBR_FT_FIND_RELATION,
+    } MBRFilterTypeE;
 
     // APRIL data
     typedef struct AprilData {

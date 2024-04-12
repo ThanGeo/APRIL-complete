@@ -24,6 +24,8 @@ set(SrcFiles
     src/controller.cpp
     src/partitioning.cpp
     src/filter.cpp
+    src/find_relation_filter.cpp
+    src/def.cpp
 )
 
 include_directories(include)

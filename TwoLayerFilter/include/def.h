@@ -50,6 +50,9 @@
 #include "omp.h"
 #include <functional>
 #include <array>
+
+#include "SpatialLib.h"
+
 using namespace std;
 
 
@@ -60,52 +63,61 @@ using namespace std;
         typedef unsigned int uint;
 #endif
 
-#define EPS 1e-08
+namespace two_layer 
+{
+        
 
-typedef double Coord;
-typedef size_t RecordId;
+        extern spatial_lib::IntermediateFilterTypeE g_iFilterType;
+        extern spatial_lib::MBRFilterTypeE g_mbrFilterType;
 
-class Record;
-class Relation;
+        #define EPS 1e-08
 
-inline int findReferenceCell1(double x, double y, double cellExtent, int numCellsPerDimension) {
-        int xInt,yInt;
+        typedef double Coord;
+        typedef size_t RecordId;
 
-        xInt = (x + EPS)/cellExtent;
-        yInt = (y + EPS)/cellExtent;
+        class Record;
+        class Relation;
 
-        return (yInt * numCellsPerDimension + xInt);
-};
+        inline int findReferenceCell1(double x, double y, double cellExtent, int numCellsPerDimension) {
+                int xInt,yInt;
 
-class Timer{
-    private:
-        using Clock = std::chrono::high_resolution_clock;
-        Clock::time_point start_time, stop_time;
+                xInt = (x + EPS)/cellExtent;
+                yInt = (y + EPS)/cellExtent;
 
-    public:
-        Timer()
-        {
-                start();
-        }
+                return (yInt * numCellsPerDimension + xInt);
+        };
 
-        void start()
-        {
-                start_time = Clock::now();
-        }
+        class Timer{
+        private:
+                using Clock = std::chrono::high_resolution_clock;
+                Clock::time_point start_time, stop_time;
+
+        public:
+                Timer()
+                {
+                        start();
+                }
+
+                void start()
+                {
+                        start_time = Clock::now();
+                }
 
 
-        double getElapsedTimeInSeconds()
-        {
-                return std::chrono::duration<double>(stop_time - start_time).count();
-        }
+                double getElapsedTimeInSeconds()
+                {
+                        return std::chrono::duration<double>(stop_time - start_time).count();
+                }
 
 
-        double stop()
-        {
-                stop_time = Clock::now();
-                return getElapsedTimeInSeconds();
-        }
-};
+                double stop()
+                {
+                        stop_time = Clock::now();
+                        return getElapsedTimeInSeconds();
+                }
+        };
+}
+
 
 
 #endif

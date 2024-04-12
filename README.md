@@ -8,7 +8,8 @@
 - Rasterizer:
 - - Full support to create APRIL and store on disk
 - MBR Filter:
-- - Implementation of Two-Layer filter. APRIL filter is always after the MBR Filter in the pipeline
+- - Two-Layer filter (D. Tsitsigkos et al.). APRIL filter is always after the MBR Filter in the pipeline
+- - Optimized Two-Layer filter for "find topological relation" queries
 - APRIL Features
 - - Partitioning mechanism [1,32] for better performance
 - - SOON: compression
@@ -41,7 +42,10 @@ Inside build/ directory, the executable 'main' is program executable.
 - - meet : r and s meet (touch)
 - - equal : r and s are geometrically equal
 - - find_relation : detect all relations between r and s
+- -m "keyword" : sets the "keyword" filter as the MBR filter (see configuration file for options)
+- -f "keyword" : sets the "keyword" filter as the intermediate filter (see configuration file for options)
 - -p "num" : sets "num" partitions for the APRIL approximation
+- -e : evaluates the query 10 times and prints the average times
 
 
 ## Configuration Files
@@ -55,6 +59,6 @@ Use a unique keyword for the section of the dataset's parameters.
 
 Then, input the new dataset in main in the following way:
 ```
-./main -q <query_type> -R <my R dataset keyword> -S <my S dataset keyword>
+./main -q <query_type> -f APRIL -R <my R dataset keyword> -S <my S dataset keyword>
 ```
 Datasets must have an offset map specified for faster refinement (TODO: add generation of offset map)

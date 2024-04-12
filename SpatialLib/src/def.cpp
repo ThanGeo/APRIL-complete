@@ -8,6 +8,7 @@ namespace spatial_lib
         // result
         g_queryOutput.queryResults = 0;
         // topology relations results
+        g_queryOutput.topologyRelationsResultMap.clear();
         g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_DISJOINT, 0));
         g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_EQUAL, 0));
         g_queryOutput.topologyRelationsResultMap.insert(std::make_pair(TR_MEET, 0));
@@ -165,6 +166,10 @@ namespace spatial_lib
         std::vector<SectionT*> sections;
         sections.reserve((i_max-i_min) * (j_max-j_min));
 
+        // printf("dataspace MBR: (%f,%f),(%f,%f)\n", dataset.dataspaceInfo.xMinGlobal, dataset.dataspaceInfo.yMinGlobal, dataset.dataspaceInfo.xMaxGlobal, dataset.dataspaceInfo.yMaxGlobal);
+        // printf("object MBR: (%f,%f),(%f,%f)\n", xMin, yMin, xMax, yMax);
+
+
         for(uint i=i_min; i<=i_max; i++) {
             for(uint j=j_min; j<=j_max; j++) {
                 uint sectionID = getSectionIDFromIdxs(i,j, dataset.aprilConfig.partitions);
@@ -177,5 +182,13 @@ namespace spatial_lib
         return sections;
     }
 
+
+    void printBoostPolygon(bg_polygon &polygon) {
+        for(auto &it : polygon.outer()) {
+            printf("(%f,%f),", it.x(), it.y());
+        }
+        printf("\n");
+    }
+    
 
 }

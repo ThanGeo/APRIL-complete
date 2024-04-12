@@ -283,6 +283,12 @@ namespace APRIL
                 case spatial_lib::TR_EQUAL:
                 case spatial_lib::TR_DISJOINT:
                 case spatial_lib::TR_INTERSECT:
+                    // if(iFilterResult == spatial_lib::TR_INTERSECT) {
+                    //     printf("%u,%u\n", idR, idS);
+                    // }
+                    // if (idR == 92943 && idS == 1554694) {
+                    //     printf("True hit result %d\n", iFilterResult);
+                    // }
                     // result
                     spatial_lib::countTopologyRelationResult(iFilterResult);
                     // time
@@ -340,6 +346,12 @@ namespace APRIL
         spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
         // count the result
         spatial_lib::countTopologyRelationResult(relation);
+        // if (relation == spatial_lib::TR_INTERSECT) {
+        //     printf("%u,%u\n", idR, idS);
+        // }
+        // if (idR == 92943 && idS == 1554694) {
+        //     printf("post refinement result %d\n", relation);
+        // }
 
     }
 
@@ -383,6 +395,283 @@ namespace APRIL
                 break;
             case spatial_lib::Q_FIND_RELATION:
                 APRILFindTopology(idR, idS);
+                break;
+            default:
+                // not supported/unknown
+                exit(-1);
+                break;
+        }
+    }
+    
+    /************************************************/
+    /**
+     * SPECIALIZED TOPOLOGY
+    */
+    /************************************************/
+
+    static void specializedTopologyRinSContainment(uint idR, uint idS) {
+        // get common sections
+        std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+        // for each common section
+        int iFilterResult;
+        for (auto &sectionID : commonSections) {
+            // fetch the APRIL of R and S for this section
+            spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+            spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+            // use APRIL intermediate filter
+            iFilterResult = RinSContainmentAPRILUncompressed(aprilR, aprilS);
+            // switch based on result
+            switch(iFilterResult) {
+                // true hits, count and return
+                case spatial_lib::TR_INSIDE:
+                case spatial_lib::TR_DISJOINT:
+                case spatial_lib::TR_INTERSECT:
+                    // result
+                    spatial_lib::countTopologyRelationResult(iFilterResult);
+
+                    // if(iFilterResult == spatial_lib::TR_INTERSECT){
+                    //     printf("%u,%u\n", idR, idS);
+                    // }
+
+                    // time
+                    spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                    return;
+            }
+        }
+        // i filter ended, measure time
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+    
+        // count refinement candidate
+        spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+        int relation;
+        // switch based on result
+        switch(iFilterResult) {            
+            // inconclusive, do selective refinement
+            // result holds what type of refinement needs to be made
+            case spatial_lib::REFINE_INSIDE_COVEREDBY_TRUEHIT_INTERSECT:
+                // time 
+                spatial_lib::time::markRefinementFilterTimer();
+                // refine
+                relation = spatial_lib::refineInsideCoveredbyTruehitIntersect(idR, idS);
+                break;
+            case spatial_lib::REFINE_DISJOINT_INSIDE_COVEREDBY_MEET_INTERSECT:
+                // time 
+                spatial_lib::time::markRefinementFilterTimer();
+                // refine
+                relation = spatial_lib::refineDisjointInsideCoveredbyMeetIntersect(idR, idS);
+                break;
+            
+        }
+        // time
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+        // count the result
+        spatial_lib::countTopologyRelationResult(relation);
+        // if(relation == spatial_lib::TR_INTERSECT){
+        //     printf("%u,%u\n", idR, idS);
+        // }
+    }
+
+    static void specializedTopologySinRContainment(uint idR, uint idS) {
+        // get common sections
+        std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+        // for each common section
+        int iFilterResult;
+        for (auto &sectionID : commonSections) {
+            // fetch the APRIL of R and S for this section
+            spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+            spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+            // use APRIL intermediate filter
+            iFilterResult = SinRContainmentAPRILUncompressed(aprilR, aprilS);
+            // switch based on result
+            switch(iFilterResult) {
+                // true hits, count and return
+                case spatial_lib::TR_CONTAINS:
+                case spatial_lib::TR_DISJOINT:
+                case spatial_lib::TR_INTERSECT:
+                    // if(iFilterResult == spatial_lib::TR_INTERSECT){
+                    //     printf("%u,%u\n", idR, idS);
+                    // }
+                    // result
+                    spatial_lib::countTopologyRelationResult(iFilterResult);
+                    // time
+                    spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                    return;
+            }
+        }
+        // i filter ended, measure time
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+    
+        // count refinement candidate
+        spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+        int relation;
+        // switch based on result
+        switch(iFilterResult) {            
+            // inconclusive, do selective refinement
+            // result holds what type of refinement needs to be made
+            case spatial_lib::REFINE_CONTAINS_COVERS_TRUEHIT_INTERSECT:
+                // time 
+                spatial_lib::time::markRefinementFilterTimer();
+                // refine
+                relation = spatial_lib::refineContainsCoversTruehitIntersect(idR, idS);
+                break;
+            case spatial_lib::REFINE_DISJOINT_CONTAINS_COVERS_MEET_INTERSECT:
+                // time 
+                spatial_lib::time::markRefinementFilterTimer();
+                // refine
+                relation = spatial_lib::refineDisjointContainsCoversMeetIntersect(idR, idS);
+                break;
+            
+        }
+        // time
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+        // count the result
+        spatial_lib::countTopologyRelationResult(relation);
+        // if(relation == spatial_lib::TR_INTERSECT){
+        //     printf("%u,%u\n", idR, idS);
+        // }
+    }
+
+    static void specializedTopologyIntersection(uint idR, uint idS) {
+        // get common sections
+        std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+        // for each common section
+        int iFilterResult;
+        for (auto &sectionID : commonSections) {
+            // fetch the APRIL of R and S for this section
+            spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+            spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+            // use APRIL intermediate filter
+            iFilterResult = MBRIntersectionAPRILUncompressed(aprilR, aprilS);
+            // switch based on result
+            switch(iFilterResult) {
+                // true hits, count and return
+                case spatial_lib::TR_DISJOINT:
+                case spatial_lib::TR_INTERSECT:
+                    // if(iFilterResult == spatial_lib::TR_INTERSECT){
+                    //     printf("%u,%u\n", idR, idS);
+                    // }
+                    // result
+                    spatial_lib::countTopologyRelationResult(iFilterResult);
+                    // time
+                    spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                    return;
+            }
+        }
+        // i filter ended, measure time
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+    
+        // count refinement candidate
+        spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+        // time 
+        spatial_lib::time::markRefinementFilterTimer();
+        // refine
+        int relation = spatial_lib::refineDisjointMeetIntersect(idR, idS);
+        // time
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+        // count the result
+        spatial_lib::countTopologyRelationResult(relation);
+        // if(relation == spatial_lib::TR_INTERSECT){
+        //     printf("%u,%u\n", idR, idS);
+        // }
+    }
+
+    static void specializedTopologyEqual(uint idR, uint idS) {
+        // get common sections
+        std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+        // for each common section
+        int iFilterResult;
+        for (auto &sectionID : commonSections) {
+            // fetch the APRIL of R and S for this section
+            spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+            spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+            // use APRIL intermediate filter
+            iFilterResult = equalMBRsAPRILUncompressed(idR, idS, aprilR, aprilS);
+            // switch based on result
+            switch(iFilterResult) {
+                // true hits, count and return
+                case spatial_lib::TR_DISJOINT:
+                case spatial_lib::TR_EQUAL:
+                case spatial_lib::TR_COVERED_BY:
+                case spatial_lib::TR_COVERS:
+                case spatial_lib::TR_INTERSECT:
+                    // if(iFilterResult == spatial_lib::TR_COVERS || iFilterResult == spatial_lib::TR_COVERED_BY) {
+                    //     printf("a) %u,%u\n",idR,idS);
+                    // }
+                    // result
+                    spatial_lib::countTopologyRelationResult(iFilterResult);
+                    // time
+                    spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                    return;
+            }
+        }
+        // i filter ended, measure time
+        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+    
+        // count refinement candidate
+        spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+        int relation;
+        // switch based on result
+        switch(iFilterResult) {            
+            // inconclusive, do selective refinement
+            // result holds what type of refinement needs to be made
+            case spatial_lib::REFINE_COVEREDBY_TRUEHIT_INTERSECT:
+                // time 
+                spatial_lib::time::markRefinementFilterTimer();
+                // refine
+                relation = spatial_lib::refineCoveredbyTrueHitIntersect(idR, idS);
+                break;
+            case spatial_lib::REFINE_COVERS_TRUEHIT_INTERSECT:
+                // time 
+                spatial_lib::time::markRefinementFilterTimer();
+                // refine
+                relation = spatial_lib::refineCoversTrueHitIntersect(idR, idS);
+                break;
+            case spatial_lib::REFINE_COVERS_COVEREDBY_TRUEHIT_INTERSECT:
+                // time 
+                spatial_lib::time::markRefinementFilterTimer();
+                // refine
+                relation = spatial_lib::refineCoversCoveredByTrueHitIntersect(idR, idS);
+                break;
+            
+        }
+        // time
+        spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+        // count the result
+        spatial_lib::countTopologyRelationResult(relation);
+        // if(relation == spatial_lib::TR_COVERS || relation == spatial_lib::TR_COVERED_BY) {
+        //     printf("b) %u,%u\n",idR,idS);
+        // }
+    }
+
+
+
+    void IntermediateFilterFindRelationEntrypoint(uint idR, uint idS, int relationCase) {
+        // time 
+        spatial_lib::time::markiFilterTimer();
+          
+        // count post mbr candidate
+        spatial_lib::g_queryOutput.postMBRFilterCandidates += 1;
+        // use appropriate query function
+        switch (relationCase) {
+            case spatial_lib::MBR_R_IN_S:
+                specializedTopologyRinSContainment(idR, idS);
+                break;
+            case spatial_lib::MBR_S_IN_R:
+                specializedTopologySinRContainment(idR, idS);
+                break;
+            case spatial_lib::MBR_EQUAL:
+                specializedTopologyEqual(idR, idS);
+                break;
+            case spatial_lib::MBR_INTERSECT:
+                specializedTopologyIntersection(idR, idS);
                 break;
             default:
                 // not supported/unknown

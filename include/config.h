@@ -7,6 +7,7 @@
 
 typedef struct ConfigActions {
     bool createApproximations = false;
+    bool runExperiments = false;
 } ConfigActionsT;
 
 typedef struct Config {
@@ -41,10 +42,16 @@ typedef struct iFilterStatement
     // FOR OTHERS
 } iFilterStatementT;
 
+typedef struct mbrFilterStatement
+{
+    bool enabled;
+    std::string mbrFilterTypeStr = "";
+} mbrFilterStatementT;
+
 void printConfig();
 
 bool verifyAndbuildQuery(QueryStatementT *queryStmt);
-bool verifyAndBuildPipeline(int mbrFilterEnabled, std::string intermediateFilterType, int refinementEnabled);
+bool verifyAndBuildPipeline(std::string mbrFilterType, std::string intermediateFilterType, int refinementEnabled);
 bool verifyDirectoryExists(std::string &directoryPath);
 
 /**

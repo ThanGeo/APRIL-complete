@@ -16,7 +16,9 @@ namespace two_layer
 
     unsigned long long result = 0;
     
-    void initTwoLayer(uint partitionsPerDimension) {
+    void initTwoLayer(uint partitionsPerDimension, spatial_lib::MBRFilterTypeE mbrFilterType) {
+        // set type
+        g_mbrFilterType = mbrFilterType;
         // get global boundaries of datasets
         Coord minX = min(R.minX, S.minX);
         Coord maxX = max(R.maxX, S.maxX);
@@ -150,7 +152,16 @@ namespace two_layer
 
 
     unsigned long long evaluateTwoLayer() {
-        return ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+        switch (g_mbrFilterType) {
+            case spatial_lib::MBR_FT_INTERSECTION_SIMPLE:
+                return ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+            case spatial_lib::MBR_FT_FIND_RELATION:
+                return FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+            default:
+                printf("Two-layer filter error: unkown MBR filter type\n");
+                exit(-1);
+        }
+        
     }
 
 
