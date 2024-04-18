@@ -15,6 +15,8 @@ namespace rasterizerlib
     bool binarySearchInVector(std::vector<uint32_t> &vec, uint32_t &x);
 
     void mapPolygonToHilbert(polygon2d &pol, uint32_t cellsPerDim);
+    void mapBoostPolygonToHilbert(polygon2d &pol, uint32_t cellsPerDim);
+    
 
     std::vector<uint32_t> getPartialCellsFromMatrix(polygon2d &polygon, uint32_t **M);
 

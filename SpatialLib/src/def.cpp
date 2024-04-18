@@ -28,6 +28,8 @@ namespace spatial_lib
         g_queryOutput.iFilterTime = 0;
         g_queryOutput.refinementTime = 0;
 
+        // on the fly april
+        g_queryOutput.rasterizationsDone = 0;
         
     }
 
@@ -60,13 +62,13 @@ namespace spatial_lib
         to->intervalsFULL = from->intervalsFULL;
     }
 
-    void addAprilDataToApproximationDataMap(DatasetT &dataset, uint sectionID, uint recID, AprilDataT aprilData) {
-        AprilDataT copyAprilData;
+    void addAprilDataToApproximationDataMap(DatasetT &dataset, uint sectionID, uint recID, AprilDataT* aprilData) {
+        // AprilDataT copyAprilData;
 
-        deepCopyAprilData(&aprilData, &copyAprilData);
+        // deepCopyAprilData(aprilData, &copyAprilData);
         
         // store april data
-        dataset.sectionMap[sectionID].aprilData.insert(std::make_pair(recID, copyAprilData));
+        dataset.sectionMap[sectionID].aprilData.insert(std::make_pair(recID, *aprilData));
         // store mapping recID -> sectionID
         auto it = dataset.recToSectionIdMap.find(recID);
         if (it != dataset.recToSectionIdMap.end()) {
@@ -77,7 +79,19 @@ namespace spatial_lib
             std::vector<uint> sectionIDs = {sectionID};
             dataset.recToSectionIdMap.insert(std::make_pair(recID, sectionIDs));
         }
-        
+    }
+
+    void addObjectToSectionMap(DatasetT &dataset, uint sectionID, uint recID) {
+        // store mapping recID -> sectionID
+        auto it = dataset.recToSectionIdMap.find(recID);
+        if (it != dataset.recToSectionIdMap.end()) {
+            // exists
+            it->second.emplace_back(sectionID);
+        } else {
+            // doesnt exist, new entry
+            std::vector<uint> sectionIDs = {sectionID};
+            dataset.recToSectionIdMap.insert(std::make_pair(recID, sectionIDs));
+        }
     }
 
     AprilDataT* getAprilDataBySectionAndObjectIDs(Dataset &dataset, uint sectionID, uint recID) {
@@ -97,6 +111,15 @@ namespace spatial_lib
         std::vector<uint> commonSectionIDs;
         set_intersection(itR->second.begin(),itR->second.end(),itS->second.begin(),itS->second.end(),back_inserter(commonSectionIDs));
         return commonSectionIDs;
+    }
+
+    std::vector<uint>* getSectionIDsOfObject(DatasetT &dataset, uint id) {
+        auto it = dataset.recToSectionIdMap.find(id);
+        if (it == dataset.recToSectionIdMap.end()) {
+            // return empty vector
+            return nullptr;
+        }
+        return &it->second;
     }
 
     std::unordered_map<uint,unsigned long> loadOffsetMap(std::string &offsetMapPath){
@@ -144,6 +167,8 @@ namespace spatial_lib
 
                 pol.outer().push_back(bg_point_xy(x,y));
             }
+        } else {
+            printf("Object with id %u not found in offset map.\n", recID);
         }
         boost::geometry::correct(pol);
         return pol;

@@ -28,6 +28,16 @@ namespace APRIL
     int joinIntervalListsSymmetricalOptimized(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2);
 
     /**
+     * joins two interval lists to detect symmetrical containment (R inside S, S inside R) while already knowing
+     * that there is at least one intersection. 
+     * Optimized way to run faster in code.: Doesn't iterate through the lists one keeping a bunch of flags. Instead, looks for specific
+     * relations through multiple, simpler traversals. 
+     * returns a spatial_lib::IntervalListsRelationshipE value indicating the lists' relationships
+    */
+    int joinIntervalListsSymmetricalOptimizedTrueHitIntersect(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2);
+    
+
+    /**
      * joins two interval lists to detect if they match 100%
     */
     int joinIntervalsForMatch(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2);

@@ -141,6 +141,45 @@ namespace rasterizerlib
         polygon.rasterData.bufferHeight = polygon.rasterData.maxCellY - polygon.rasterData.minCellY + 1;
     }
 
+    void mapBoostPolygonToHilbert(polygon2d &polygon, uint32_t cellsPerDim){
+        double x,y;
+        //first, map the polygon's coordinates to this section's hilbert space
+        spatial_lib::bg_polygon bg_polygon;
+        for(auto &p: polygon.bgPolygon.outer()){
+            // get
+            x = p.x();
+            y = p.y();
+            // set MBR
+            polygon.mbr.minPoint.x = std::min(polygon.mbr.minPoint.x, x);
+            polygon.mbr.minPoint.y = std::min(polygon.mbr.minPoint.y, y);
+            polygon.mbr.maxPoint.x = std::max(polygon.mbr.maxPoint.x, x);
+            polygon.mbr.maxPoint.y = std::max(polygon.mbr.maxPoint.y, y);
+            // map
+            mapXYToHilbert(x, y, cellsPerDim);
+            // set
+            bg_polygon.outer().emplace_back(x,y);
+        }
+        boost::geometry::correct(polygon.bgPolygon);	
+        // replace in polygon
+        polygon.bgPolygon = bg_polygon;
+
+        //map the polygon's mbr
+        polygon.rasterData.minCellX = mapSingleValueToHilbert(polygon.mbr.minPoint.x, g_config.xMin, g_config.xMax, cellsPerDim);
+        polygon.rasterData.minCellX > 0 ? polygon.rasterData.minCellX -= 1 : polygon.rasterData.minCellX = 0;
+        polygon.rasterData.minCellY = mapSingleValueToHilbert(polygon.mbr.minPoint.y, g_config.yMin, g_config.yMax, cellsPerDim);
+        polygon.rasterData.minCellY > 0 ? polygon.rasterData.minCellY -= 1 : polygon.rasterData.minCellY = 0;
+        polygon.rasterData.maxCellX = mapSingleValueToHilbert(polygon.mbr.maxPoint.x, g_config.xMin, g_config.xMax, cellsPerDim);
+        polygon.rasterData.maxCellX < cellsPerDim - 1 ? polygon.rasterData.maxCellX += 1 : polygon.rasterData.maxCellX = cellsPerDim - 1;
+        polygon.rasterData.maxCellY = mapSingleValueToHilbert(polygon.mbr.maxPoint.y, g_config.yMin, g_config.yMax, cellsPerDim);
+        polygon.rasterData.maxCellY < cellsPerDim - 1 ? polygon.rasterData.maxCellY += 1 : polygon.rasterData.maxCellY = cellsPerDim - 1;
+
+        //set dimensions for buffers 
+        polygon.rasterData.bufferWidth = polygon.rasterData.maxCellX - polygon.rasterData.minCellX + 1;
+        polygon.rasterData.bufferHeight = polygon.rasterData.maxCellY - polygon.rasterData.minCellY + 1;
+
+
+    }
+
     std::vector<uint32_t> getPartialCellsFromMatrix(polygon2d &polygon, uint32_t **M){
         std::vector<uint32_t> partialCells;
         for(int i=0; i<polygon.rasterData.bufferWidth; i++){

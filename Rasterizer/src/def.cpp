@@ -29,6 +29,7 @@ namespace rasterizerlib
 
     void printConfig() {
         printf("Dataspace MBR: (%f,%f) to (%f,%f)\n", g_config.xMin, g_config.yMin, g_config.xMax, g_config.yMax);
+        printf("N: %u, cells per dim: %u\n", g_config.orderN, g_config.cellsPerDim);
         switch (g_config.celEnumType) {
             case CE_HILBERT:
                 printf("CELL ENUM TYPE: HILBERT \n");

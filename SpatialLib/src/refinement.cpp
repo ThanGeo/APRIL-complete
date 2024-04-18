@@ -89,7 +89,12 @@ namespace spatial_lib
     }
 
     static int refineEqual(bg_polygon *polygonR, bg_polygon *polygonS){
-        return boost::geometry::equals(*polygonR, *polygonS);
+        // dont use this bad function. 
+        // Returns false for some equal polygons (maybe due to double precision errors)
+        // return boost::geometry::equals(*polygonR, *polygonS);
+
+        // instead, use the relate method that performs the DE-9IM matrix
+        return boost::geometry::relate(*polygonR, *polygonS, equalMask);
     }
 
     static int refineMeet(bg_polygon *polygonR, bg_polygon *polygonS){
@@ -298,13 +303,21 @@ namespace spatial_lib
      * Find Relation
      */
 
-    void refineFindRelationJoin(uint idR, uint idS) {
+    void refineAllRelations(uint idR, uint idS) {
         bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
         bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
         
         // refine
         int refinementResult = refineFindRelation(&boostPolygonR, &boostPolygonS, true);
-
+        // if (refinementResult == spatial_lib::TR_INTERSECT) {
+        //     printf("%u,%u\n", idR, idS);
+        // }
+        // if (idR == 108727 && idS == 3098) {
+        //     printf("%u,%u result: %d\n", idR, idS, refinementResult);
+        // }
+        // if (idR == 230945 && idS == 9127906) {
+        //     printf("%u,%u refine result: %d\n", idR, idS, refinementResult);
+        // }
         // count result
         countTopologyRelationResult(refinementResult);
     }
@@ -326,10 +339,7 @@ namespace spatial_lib
         bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
         bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
         
-        // if (idR == 92943 && idS == 1554694) {
-        //     return refineFindRelation(&boostPolygonR, &boostPolygonS, false);
-        // }
-        // return 0;
+        // refine
         return refineFindRelation(&boostPolygonR, &boostPolygonS, false);
     }
 
@@ -467,7 +477,7 @@ namespace spatial_lib
                 refineCoveredByJoin(idR, idS);
                 break;
             case Q_FIND_RELATION:
-                refineFindRelationJoin(idR, idS);
+                refineAllRelations(idR, idS);
                 break;
 
             default:
@@ -655,7 +665,9 @@ namespace spatial_lib
         // covers
         if (compareMasks(code, coversCode1) || compareMasks(code, coversCode2) || 
             compareMasks(code, coversCode3) || compareMasks(code, coversCode4)) {
-            return TR_COVERS;
+            // return TR_COVERS;
+            // return contains for consistency
+            return TR_CONTAINS;
         }
 
         // intersect
@@ -674,7 +686,9 @@ namespace spatial_lib
         // covered by
         if (compareMasks(code, coveredbyCode1) || compareMasks(code, coveredbyCode2) || 
             compareMasks(code, coveredbyCode3) || compareMasks(code, coveredbyCode4)) {
-            return TR_COVERED_BY;
+            // return TR_COVERED_BY;
+            // return inside for consistency
+            return TR_INSIDE;
         }
 
         // intersect
@@ -759,7 +773,12 @@ namespace spatial_lib
 
 
 
-
+    bg_polygon loadBoostPolygonByIDandFlag(uint id, bool R) {
+        if (R) {
+            return loadPolygonFromDiskBoostGeometry(id, finR, offsetMapR);
+        }
+        return loadPolygonFromDiskBoostGeometry(id, finS, offsetMapS);
+    }
 
 
     void setupRefinement(QueryT &query){

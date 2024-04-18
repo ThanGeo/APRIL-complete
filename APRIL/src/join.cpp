@@ -288,6 +288,35 @@ namespace APRIL
         }
     }
 
+    int joinIntervalListsSymmetricalOptimizedTrueHitIntersect(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2) {
+        // a list might be empty (disjoint)
+        if(numintervals1 == 0 || numintervals2 == 0){
+            return spatial_lib::IL_DISJOINT;
+        }
+
+        bool RinS = false;
+        bool SinR = false;
+
+        // is intervals R contained in intervals S?
+        if (insideJoinIntervalLists(ar1, numintervals1, ar2, numintervals2)) {
+            RinS = true;
+        }
+        // is intervals S contained in intervals R?
+        if (insideJoinIntervalLists(ar2, numintervals2, ar1, numintervals1)) {
+            SinR = true;
+        }
+        if (RinS && SinR) {
+            // if both are contained, they match
+            return spatial_lib::IL_MATCH;
+        } else if(RinS) {
+            return spatial_lib::IL_R_INSIDE_S;
+        } else if(SinR) {
+            return spatial_lib::IL_S_INSIDE_R;
+        } else {
+            return spatial_lib::IL_INTERSECT;
+        }
+    }
+
     int joinIntervalsForMatch(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2){
         //they may not have any intervals of this type
         if(numintervals1 == 0 || numintervals2 == 0){

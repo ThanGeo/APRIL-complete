@@ -32,6 +32,8 @@ namespace spatial_lib
         double mbrFilterTime;
         double iFilterTime;
         double refinementTime;
+        // on the fly april
+        uint rasterizationsDone;
     } QueryOutputT;
 
     // global query output variable
@@ -77,6 +79,8 @@ namespace spatial_lib
         std::string offsetMapPath;
         // derived from the path
         std::string datasetName;
+        // as given by arguments and specified by datasets.ini config file
+        std::string nickname;
         // map: recID -> vector data (polygon, linestring etc.)
         std::unordered_map<uint, spatial_lib::VectorDataT> vectorData;
         // double xMinGlobal, yMinGlobal, xMaxGlobal, yMaxGlobal;  // global bounds based on dataset bounds
@@ -107,7 +111,9 @@ namespace spatial_lib
     void countResult();
     void countTopologyRelationResult(int relation);
 
-    void addAprilDataToApproximationDataMap(DatasetT &dataset, uint sectionID, uint recID, AprilDataT aprilData);
+    void addAprilDataToApproximationDataMap(DatasetT &dataset, uint sectionID, uint recID, AprilDataT* aprilData);
+
+    void addObjectToSectionMap(DatasetT &dataset, uint sectionID, uint recID);
     /**
      * @brief returns the APRIL data of an object based on section and rec IDs from a given dataset
      * 
@@ -149,8 +155,18 @@ namespace spatial_lib
      * @param idR 
      * @param idS 
      * @return std::vector<uint> 
+     * 
      */
     std::vector<uint> getCommonSectionIDsOfObjects(Dataset &datasetR, Dataset &datasetS, uint idR, uint idS);
+
+    /**
+     * @brief Get the Section IDs Of an object by ID
+     * 
+     * @param dataset 
+     * @param id 
+     * @return std::vector<uint>* 
+     */
+    std::vector<uint>* getSectionIDsOfObject(DatasetT &dataset, uint id);
 
 
     void printBoostPolygon(bg_polygon &polygon);

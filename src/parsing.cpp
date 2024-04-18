@@ -6,40 +6,33 @@ static boost::property_tree::ptree dataset_config_pt;
 
 static void parseDatasetOptions(QueryStatementT *queryStmt) {
     // check if datasets.ini file exists
-    FILE *fptr = fopen(g_config.dirPaths.datasetsConfigPath.c_str(), "r");
-    if (fptr == NULL) {
-        std::cout << g_config.dirPaths.datasetsConfigPath << " doesnt exist" << std::endl;
+    if (!verifyFileExists(g_config.dirPaths.datasetsConfigPath)) {
         log_err("Dataset configuration file 'dataset.ini' missing from Database directory. Please refer to the README file.");
         return;
     }
-    fclose(fptr);
-
-    // cmd line argument
-    std::string nicknameR = queryStmt->datasetPathR;
-    std::string nicknameS = queryStmt->datasetPathS;
 
     // if not specified
-    if (nicknameR == "" || nicknameS == "") {
+    if (queryStmt->datasetNicknameR == "" || queryStmt->datasetNicknameS == "") {
         // run default scenario (dev only)
         queryStmt->datasetPathR = dataset_config_pt.get<std::string>("T1NA.path");
         queryStmt->datasetPathS = dataset_config_pt.get<std::string>("T2NA.path");
-        nicknameR = "T1NA";
-        nicknameR = "T2NA";
+        queryStmt->datasetNicknameR = "T1NA";
+        queryStmt->datasetNicknameS = "T2NA";
     } else {
-        queryStmt->datasetPathR = dataset_config_pt.get<std::string>(nicknameR+".path");
-        queryStmt->datasetPathS = dataset_config_pt.get<std::string>(nicknameS+".path");
+        queryStmt->datasetPathR = dataset_config_pt.get<std::string>(queryStmt->datasetNicknameR+".path");
+        queryStmt->datasetPathS = dataset_config_pt.get<std::string>(queryStmt->datasetNicknameS+".path");
     }
 
     // dataset count (todo, make more flexible)
     queryStmt->datasetCount = 2;
     
     // dataset data types
-    spatial_lib::DataTypeE datatypeR = spatial_lib::dataTypeTextToInt(dataset_config_pt.get<std::string>(nicknameR+".datatype"));
+    spatial_lib::DataTypeE datatypeR = spatial_lib::dataTypeTextToInt(dataset_config_pt.get<std::string>(queryStmt->datasetNicknameR+".datatype"));
     if (datatypeR == spatial_lib::DT_INVALID) {
         log_err("Unknown data type for dataset R.");
         exit(-1);
     }
-    spatial_lib::DataTypeE datatypeS = spatial_lib::dataTypeTextToInt(dataset_config_pt.get<std::string>(nicknameS+".datatype"));
+    spatial_lib::DataTypeE datatypeS = spatial_lib::dataTypeTextToInt(dataset_config_pt.get<std::string>(queryStmt->datasetNicknameS+".datatype"));
     if (datatypeS == spatial_lib::DT_INVALID) {
         log_err("Unknown data type for dataset S.");
         exit(-1);
@@ -55,11 +48,11 @@ static void parseDatasetOptions(QueryStatementT *queryStmt) {
     }
     
     // offset maps
-    queryStmt->offsetMapPathR = dataset_config_pt.get<std::string>(nicknameR+".offsetMapPath");
+    queryStmt->offsetMapPathR = dataset_config_pt.get<std::string>(queryStmt->datasetNicknameR+".offsetMapPath");
     if (queryStmt->offsetMapPathR == "") {
         log_err("Missing offset map path for dataset R.");
     }
-    queryStmt->offsetMapPathS = dataset_config_pt.get<std::string>(nicknameS+".offsetMapPath");
+    queryStmt->offsetMapPathS = dataset_config_pt.get<std::string>(queryStmt->datasetNicknameS+".offsetMapPath");
     if (queryStmt->offsetMapPathS == "") {
         log_err("Missing offset map path for dataset S.");
     }
@@ -69,11 +62,11 @@ static void parseDatasetOptions(QueryStatementT *queryStmt) {
     double yMinR = std::numeric_limits<int>::max();
     double xMaxR = -std::numeric_limits<int>::min();
     double yMaxR = -std::numeric_limits<int>::max();
-    if(dataset_config_pt.get<int>(nicknameR+".bounds")) {
-        xMinR = dataset_config_pt.get<double>(nicknameR+".xMin");
-        yMinR = dataset_config_pt.get<double>(nicknameR+".yMin");
-        xMaxR = dataset_config_pt.get<double>(nicknameR+".xMax");
-        yMaxR = dataset_config_pt.get<double>(nicknameR+".yMax");
+    if(dataset_config_pt.get<int>(queryStmt->datasetNicknameR+".bounds")) {
+        xMinR = dataset_config_pt.get<double>(queryStmt->datasetNicknameR+".xMin");
+        yMinR = dataset_config_pt.get<double>(queryStmt->datasetNicknameR+".yMin");
+        xMaxR = dataset_config_pt.get<double>(queryStmt->datasetNicknameR+".xMax");
+        yMaxR = dataset_config_pt.get<double>(queryStmt->datasetNicknameR+".yMax");
         queryStmt->boundsSet = true;
         success_text("Set hardcoded bounds for R");
     }
@@ -81,11 +74,11 @@ static void parseDatasetOptions(QueryStatementT *queryStmt) {
     double yMinS = std::numeric_limits<int>::max();
     double xMaxS = -std::numeric_limits<int>::min();
     double yMaxS = -std::numeric_limits<int>::max();
-    if(dataset_config_pt.get<int>(nicknameS+".bounds")) {
-        xMinS = dataset_config_pt.get<double>(nicknameS+".xMin");
-        yMinS = dataset_config_pt.get<double>(nicknameS+".yMin");
-        xMaxS = dataset_config_pt.get<double>(nicknameS+".xMax");
-        yMaxS = dataset_config_pt.get<double>(nicknameS+".yMax");
+    if(dataset_config_pt.get<int>(queryStmt->datasetNicknameS+".bounds")) {
+        xMinS = dataset_config_pt.get<double>(queryStmt->datasetNicknameS+".xMin");
+        yMinS = dataset_config_pt.get<double>(queryStmt->datasetNicknameS+".yMin");
+        xMaxS = dataset_config_pt.get<double>(queryStmt->datasetNicknameS+".xMax");
+        yMaxS = dataset_config_pt.get<double>(queryStmt->datasetNicknameS+".yMax");
         queryStmt->boundsSet = true;
         success_text("Set hardcoded bounds for S");
     }
@@ -174,7 +167,9 @@ static void parseAPRILoptions(iFilterStatementT *iFilterStmt) {
 
 static void parseIntermediateFilterOptions(iFilterStatementT *iFilterStmt) {
     switch (g_config.pipeline.iFilterType) {
-        case spatial_lib::AT_APRIL:
+        case spatial_lib::IF_APRIL_FR:
+        case spatial_lib::IF_APRIL_STANDARD:
+        case spatial_lib::IF_APRIL_OTF:
             parseAPRILoptions(iFilterStmt);
             break;
         case spatial_lib::AT_NONE:
@@ -207,16 +202,13 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     iFilterStatementT iFilterStmt;
     mbrFilterStatementT mbrFilterStmt;
     // check If config file does exist
-    FILE *fptr = fopen(g_config.dirPaths.configFilePath.c_str(), "r");
-    if (fptr == NULL) {
-        std::cout << g_config.dirPaths.configFilePath << " doesnt exist" << std::endl;
-        log_err("Configuration file 'config.ini' missing from Database directory.");
+    if (!verifyFileExists(g_config.dirPaths.configFilePath)) {
+        log_err("Configuration file 'config.ini' missing from Database directory. Please refer to the README file.");
         return;
     }
-    fclose(fptr);
 
     // read arguments
-    while ((c = getopt(argc, argv, "m:p:cf:q:R:S:e?")) != -1)
+    while ((c = getopt(argc, argv, "m:p:cf:q:R:S:ev:?")) != -1)
     {
         switch (c)
         {
@@ -233,12 +225,12 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
                 break;
             case 'R':
                 // Dataset R path
-                queryStmt.datasetPathR = std::string(optarg);
+                queryStmt.datasetNicknameR = std::string(optarg);
                 queryStmt.datasetCount++;
                 break;
             case 'S':
                 // Dataset S path
-                queryStmt.datasetPathS = std::string(optarg);
+                queryStmt.datasetNicknameS = std::string(optarg);
                 queryStmt.datasetCount++;
                 break;
             case 'p':
@@ -250,6 +242,10 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
                 break;
             case 'e':
                 g_config.actions.runExperiments = true;
+                break;
+            case 'v':
+                g_config.actions.exportCSV = true;
+                g_config.actions.csvFilepath = std::string(optarg);
                 break;
             default:
                 exit(-1);

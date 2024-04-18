@@ -8,6 +8,8 @@
 typedef struct ConfigActions {
     bool createApproximations = false;
     bool runExperiments = false;
+    bool exportCSV = false;
+    std::string csvFilepath = "";
 } ConfigActionsT;
 
 typedef struct Config {
@@ -24,6 +26,7 @@ typedef struct QueryStatement
 {
     std::string queryType = "";
     std::string datasetPathR = "", datasetPathS = "";
+    std::string datasetNicknameR = "", datasetNicknameS = "";
     std::string offsetMapPathR = "", offsetMapPathS = "";
     int datasetTypeCombination = -1;
     int datasetCount = 0;
@@ -49,6 +52,7 @@ typedef struct mbrFilterStatement
 } mbrFilterStatementT;
 
 void printConfig();
+std::string getConfigSettingsStr();
 
 bool verifyAndbuildQuery(QueryStatementT *queryStmt);
 bool verifyAndBuildPipeline(std::string mbrFilterType, std::string intermediateFilterType, int refinementEnabled);

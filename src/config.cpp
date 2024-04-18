@@ -18,34 +18,34 @@ static std::unordered_map<std::string, spatial_lib::QueryTypeE> queryStringToInt
     {"find_relation",spatial_lib::Q_FIND_RELATION},
     };
 
-static std::unordered_map<std::string, int> intermediateFilterStringToIntMap = {
-    {"APRIL",spatial_lib::AT_APRIL},
-    {"RI",spatial_lib::AT_RI},
-    {"5CCA",spatial_lib::AT_5CCH},
-    {"GEOS",spatial_lib::AT_GEOS},
-    {"RA",spatial_lib::AT_RA}
+static std::unordered_map<std::string, spatial_lib::IntermediateFilterTypeE> intermediateFilterStringToIntMap = {
+    {"APRIL_STANDARD",spatial_lib::IF_APRIL_STANDARD},
+    {"APRIL_FR",spatial_lib::IF_APRIL_FR},
+    {"APRIL_OTF",spatial_lib::IF_APRIL_OTF},
+    // {"RI",spatial_lib::AT_RI},
+    // {"5CCA",spatial_lib::AT_5CCH},
+    // {"GEOS",spatial_lib::AT_GEOS},
+    // {"RA",spatial_lib::AT_RA}
     };
 
 static std::unordered_map<std::string, int> mbrFilterStringToIntMap = {
-    {"INTERSECTION",spatial_lib::MBR_FT_INTERSECTION_SIMPLE},
-    {"FIND_RELATION",spatial_lib::MBR_FT_FIND_RELATION},
+    {"MBR_STANDARD",spatial_lib::MBR_FT_INTERSECTION_SIMPLE},
+    {"MBR_FR",spatial_lib::MBR_FT_FIND_RELATION},
     };
 
 static std::string iFilterTypeIntToText(int val){
     switch(val) {
-        case spatial_lib::AT_APRIL: return "APRIL";
-        case spatial_lib::AT_5CCH: return "5C+CH";
-        case spatial_lib::AT_RI: return "RI";
-        case spatial_lib::AT_GEOS: return "GEOS";
-        case spatial_lib::AT_RA: return "RA";
-        case spatial_lib::AT_NONE: return "0";
+        case spatial_lib::IF_NONE: return "NONE";
+        case spatial_lib::IF_APRIL_STANDARD: return "APRIL STANDARD";
+        case spatial_lib::IF_APRIL_FR: return "APRIL FIND RELATION";
+        case spatial_lib::IF_APRIL_OTF: return "APRIL ON THE FLY";
     }
 }
 
 static std::string mbrFilterTypeIntToText(int val){
     switch(val) {
-        case spatial_lib::MBR_FT_INTERSECTION_SIMPLE: return "SIMPLE INTERSECTION";
-        case spatial_lib::MBR_FT_FIND_RELATION: return "FIND RELATION";
+        case spatial_lib::MBR_FT_INTERSECTION_SIMPLE: return "STANDARD MBR FILTER";
+        case spatial_lib::MBR_FT_FIND_RELATION: return "FIND RELATION MBR FILTER";
     }
 }
 
@@ -73,6 +73,14 @@ void printConfig() {
     std::cout << "------------------------------------" << std::endl;
 }
 
+std::string getConfigSettingsStr() {
+    std::string str = "";
+    str += "Query: " + queryTypeIntToText(g_config.queryData.type) + "\n";
+    str += "Datasets: " + g_config.queryData.R.nickname + "," + g_config.queryData.S.nickname + "\n";
+    str += "Pipeline: " + mbrFilterTypeIntToText(g_config.pipeline.MBRFilterType) + "->" + iFilterTypeIntToText(g_config.pipeline.iFilterType) + "->Refinement\n";
+    return str;
+}
+
 static bool verifyIntermediateFilterType(std::string queryType) {
     if (auto it = queryStringToIntMap.find(queryType) != queryStringToIntMap.end()) {
         return true;
@@ -92,6 +100,13 @@ static bool verifyQuery(QueryStatementT *queryStmt) {
     if (itqt == queryStringToIntMap.end()) {
         log_err("Failed when verifying query type.");
         // todo: print available query types strings
+        return false;
+    }
+
+    // verify combination of query + MBR filter
+    if ((itqt->second != spatial_lib::Q_FIND_RELATION && g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FIND_RELATION)) {
+        // not allowed to use specialized MBR filter for non find relation queries
+        log_err_w_text("'Find relation' MBR filter allowed only for 'find relation' queries. Not", queryStmt->queryType);
         return false;
     }
 
@@ -122,20 +137,20 @@ bool verifyAndbuildQuery(QueryStatementT *queryStmt) {
     // printf("Global bounds: (%f,%f),(%f,%f)\n", query.xMinGlobal, query.yMinGlobal, query.xMaxGlobal, query.yMaxGlobal);
     
     // verify dataset paths
-    if (!verifyDatasetPaths(queryStmt->datasetPathR) ){
+    if (!verifydatasetNickname(queryStmt->datasetPathR) ){
         log_err("Failed when verifying dataset R path.");
         return false;
     }
-    if (!verifyDatasetPaths(queryStmt->datasetPathS) ){
+    if (!verifydatasetNickname(queryStmt->datasetPathS) ){
         log_err("Failed when verifying dataset S path.");
         return false;
     }
     // verify offset map paths
-    if (!verifyDatasetPaths(queryStmt->offsetMapPathR) ){
+    if (!verifydatasetNickname(queryStmt->offsetMapPathR) ){
         log_err("Failed when verifying offset map path of R.");
         return false;
     }
-    if (!verifyDatasetPaths(queryStmt->offsetMapPathS) ){
+    if (!verifydatasetNickname(queryStmt->offsetMapPathS) ){
         log_err("Failed when verifying offset map path of S.");
         return false;
     }
@@ -147,7 +162,9 @@ bool verifyAndbuildQuery(QueryStatementT *queryStmt) {
     R.dataType = queryStmt->datatypeR;
     S.dataType = queryStmt->datatypeS;
     R.path = queryStmt->datasetPathR;
+    R.nickname = queryStmt->datasetNicknameR;
     S.path = queryStmt->datasetPathS;
+    S.nickname = queryStmt->datasetNicknameS;
     R.offsetMapPath = queryStmt->offsetMapPathR;
     S.offsetMapPath = queryStmt->offsetMapPathS;
     R.datasetName = getDatasetNameFromPath(R.path);
@@ -172,13 +189,14 @@ static bool verifyPipeline(std::string mbrFilterType, std::string intermediateFi
         return false;
     }
     if (intermediateFilterType != "") {
-        it = intermediateFilterStringToIntMap.find(intermediateFilterType);
+        auto it = intermediateFilterStringToIntMap.find(intermediateFilterType);
         if (it == intermediateFilterStringToIntMap.end()) {
             log_err_w_text("Invalid selection of intermediate filter type.", intermediateFilterType);
             // todo: print availables
             return false;
         }
     }
+
     return true;
 }
 
@@ -200,7 +218,7 @@ bool verifyAndBuildPipeline(std::string mbrFilterType, std::string intermediateF
     if (intermediateFilterType != "") {
         // build
         auto it = intermediateFilterStringToIntMap.find(intermediateFilterType);
-        g_config.pipeline.iFilterType = (spatial_lib::IntermediateFilterTypeE) it->second;
+        g_config.pipeline.iFilterType = it->second;
     } else {
         // no filter
         g_config.pipeline.iFilterType = spatial_lib::IF_NONE;
@@ -285,18 +303,10 @@ static bool createAPRIL(spatial_lib::DatasetT &dataset) {
             rasterizerlib::setDataspace(section->rasterxMin, section->rasteryMin, section->rasterxMax, section->rasteryMax);
 
             // generate the raster based on the configuration
-            spatial_lib::AprilDataT *aprilData = rasterizerlib::generate(polygon, rasterizerlib::GT_APRIL);
-
-            if (aprilData == NULL) {
-                log_err("Rasterization failed.");
-                printPolygon(polygon, recID);
-                exit(-1);
-            }
+            spatial_lib::AprilDataT aprilData = rasterizerlib::generate(polygon, rasterizerlib::GT_APRIL);
             
             // save on disk
-            APRIL::saveAPRILonDisk(foutALL, foutFULL, recID, section->sectionID, aprilData);
-            // free memory
-            delete aprilData;
+            APRIL::saveAPRILonDisk(foutALL, foutFULL, recID, section->sectionID, &aprilData);
         }
     }
 
@@ -334,7 +344,7 @@ static void initializeSections(spatial_lib::QueryT &queryData, spatial_lib::Data
     }
 }
 
-static void adjustSections(spatial_lib::DatasetT &dataset, double xMin, double yMin, double xMax, double yMax) {
+static void adjustSections(spatial_lib::DatasetT &dataset, uint recID, double xMin, double yMin, double xMax, double yMax) {
     std::vector<spatial_lib::SectionT*> sections = spatial_lib::getSectionsOfMBR(dataset, xMin, yMin,xMax, yMax);
     for (auto &section : sections) {
         if(xMin < section->interestxMin){
@@ -352,6 +362,12 @@ static void adjustSections(spatial_lib::DatasetT &dataset, double xMin, double y
 
         // printf("Adjusted section raster area from: (%f,%f),(%f,%f) \n", section->interestxMin, section->interestyMin, section->interestxMax, section->interestyMax);  
         // printf("To: (%f,%f),(%f,%f) \n", section->rasterxMin, section->rasteryMin, section->rasterxMax, section->rasteryMax);  
+
+        // if on the fly
+        if (g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_OTF) {
+            // store the rec to section map
+            spatial_lib::addObjectToSectionMap(dataset, section->sectionID, recID);
+        }
 
     }
     
@@ -380,6 +396,8 @@ static void matchSections(spatial_lib::DatasetT &datasetR, spatial_lib::DatasetT
         double yMax = std::max(itR->second.rasteryMax,itS->second.rasteryMax);
         itR->second.rasteryMax = yMax;
         itS->second.rasteryMax = yMax;
+
+        // printf("Finalized Section %d: (%f,%f),(%f,%f)\n", secID, itR->second.rasterxMin, itR->second.rasteryMin, itR->second.rasterxMax, itR->second.rasteryMax);
     }
 }
 
@@ -444,6 +462,15 @@ static void initAPRIL() {
     success_text("APRIL intermediate filter set.");
 }
 
+static void initAPRILOTF() {
+
+    // setup filter (same april config for both datasets)
+    // todo: extend to allow different april configs for R and S
+    APRIL::setupAPRILIntermediateFilter(&g_config.queryData);
+
+    success_text("APRIL ON THE FLY intermediate filter set.");
+}
+
 static void loadDataset(std::string &filepath, bool left) {
     int polygonCount;
     int vertexCount;
@@ -453,7 +480,7 @@ static void loadDataset(std::string &filepath, bool left) {
     ifstream file( filepath, fstream::in | ios_base::binary);
     if(!file)
     {
-        cerr << "Cannot open the File : " << filepath << endl;
+        cerr << "Cannot open the File: " << filepath << endl;
         exit(1);
     }
 
@@ -484,34 +511,41 @@ static void loadDataset(std::string &filepath, bool left) {
             minYmbr = std::min(minYmbr, y);
             maxYmbr = std::max(maxYmbr, y);
             
-            // if (recID == 92943 || recID == 1554694) {
+            
+            // if (recID == 672181 || recID == 3913769) {
             //     printf("(%f,%f),",x,y);
             // }
         }
+        // if (recID == 672181 || recID == 3913769) {
+        //     printf("\n\n");    
+        // }
 
-        // if (recID == 92943 || recID == 1554694) {
+        // MBR
+        // if (recID == 672181 || recID == 3913769) {
+        //     printf("(%f,%f),(%f,%f),(%f,%f),(%f,%f)",minXmbr,minYmbr,maxXmbr,minYmbr,maxXmbr,maxYmbr,minXmbr,maxYmbr);
         //     printf("\n\n");    
         // }
         // add to relation for the MBR filter
         two_layer::addObjectToDataset(left, recID, minXmbr, minYmbr, maxXmbr, maxYmbr);
 
         // if APRIL is set
-        if(g_config.pipeline.iFilterType == spatial_lib::IF_APRIL) {
+        if(g_config.pipeline.iFilterType >= spatial_lib::IF_MARK_APRIL_BEGIN && g_config.pipeline.iFilterType < spatial_lib::IF_MARK_APRIL_END) {
             // adjust sections
             if (left) {
-                adjustSections(g_config.queryData.R, minXmbr, minYmbr, maxXmbr, maxYmbr);
+                adjustSections(g_config.queryData.R, recID, minXmbr, minYmbr, maxXmbr, maxYmbr);
             } else {
-                adjustSections(g_config.queryData.S, minXmbr, minYmbr, maxXmbr, maxYmbr);
+                adjustSections(g_config.queryData.S, recID, minXmbr, minYmbr, maxXmbr, maxYmbr);
             }
         }
     }
-
+    success_text_with_number("Loaded dataset", polygonCount);
     file.close();
 }
 
+// TODO: optimize the section stuff because its too slow
 static void setupDataspace(std::string &Rfilepath, std::string &Sfilepath) {
     // if APRIL is set
-    if(g_config.pipeline.iFilterType == spatial_lib::IF_APRIL) {
+    if(g_config.pipeline.iFilterType >= spatial_lib::IF_MARK_APRIL_BEGIN && g_config.pipeline.iFilterType < spatial_lib::IF_MARK_APRIL_END) {
         // create sections
         initializeSections(g_config.queryData, g_config.queryData.R);
         initializeSections(g_config.queryData, g_config.queryData.S);
@@ -521,7 +555,7 @@ static void setupDataspace(std::string &Rfilepath, std::string &Sfilepath) {
     loadDataset(Sfilepath, false);
 
     // if APRIL is set
-    if(g_config.pipeline.iFilterType == spatial_lib::IF_APRIL) {
+    if(g_config.pipeline.iFilterType >= spatial_lib::IF_MARK_APRIL_BEGIN && g_config.pipeline.iFilterType < spatial_lib::IF_MARK_APRIL_END) {
         // match sections built by R and S
         matchSections(g_config.queryData.R, g_config.queryData.S);
     }
@@ -556,11 +590,23 @@ void initConfig() {
 
     // initialize intermediate filter, if any
     switch (g_config.pipeline.iFilterType) {
-        case spatial_lib::IF_APRIL:
+        case spatial_lib::IF_APRIL_FR:
             // init APRIL
             initAPRIL();
-            // set as next stage after two layer MBR filter
-            two_layer::setNextStage(spatial_lib::IF_APRIL);
+            // set as next stage after two-layer MBR filter
+            two_layer::setNextStage(spatial_lib::IF_APRIL_FR);
+            break;
+        case spatial_lib::IF_APRIL_STANDARD:
+            // init APRIL
+            initAPRIL();
+            // set as next stage after two-layer MBR filter
+            two_layer::setNextStage(spatial_lib::IF_APRIL_STANDARD);
+            break;
+        case spatial_lib::IF_APRIL_OTF:
+            // init ON ThE FLY APRIL
+            initAPRILOTF();
+            // set as next stage after two-layer MBR filter
+            two_layer::setNextStage(spatial_lib::IF_APRIL_OTF);
             break;
         case spatial_lib::IF_NONE:
             // set refinement as next stage

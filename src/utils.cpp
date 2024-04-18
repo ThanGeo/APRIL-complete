@@ -22,6 +22,12 @@ void success_text(char* text) {
     fprintf(stderr, "%s\n", msg.c_str());
 }
 
+void success_text_with_number(char* text, int number) {
+    std::string textStr(text);
+    std::string msg = GREEN "[SUCCESS]" NC ": " + textStr + ": " + std::to_string(number);
+    fprintf(stderr, "%s\n", msg.c_str());
+}
+
 void success_text_with_time(char* text, double seconds) {
     std::string textStr(text);
     std::string msg = GREEN "[SUCCESS]" NC ": " + textStr;
@@ -80,7 +86,7 @@ static bool checkDatafileTypeExtension(std::string &fileExtension) {
     return true;
 }
 
-bool verifyDatasetPaths(std::string &datasetPath){
+bool verifydatasetNickname(std::string &datasetPath){
     std::string fileExtension = datasetPath.substr(datasetPath.length() - 3);
     // check file extension
     if (!checkDatafileTypeExtension(fileExtension)) {
@@ -101,7 +107,6 @@ bool verifyFileExists(std::string &filePath) {
         fclose(file);
         return true;
     }
-    log_err("File doesn't exist on disk.");
     return false;
 }
 

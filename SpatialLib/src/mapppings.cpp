@@ -6,7 +6,13 @@ namespace spatial_lib
         switch(val) {
             case spatial_lib::Q_INTERSECT: return "intersect";
             case spatial_lib::Q_INSIDE: return "inside";
-            case spatial_lib::Q_FIND_RELATION: return "find_relation";
+            case spatial_lib::Q_DISJOINT: return "disjoint";
+            case spatial_lib::Q_EQUAL: return "equal";
+            case spatial_lib::Q_COVERED_BY: return "covered by";
+            case spatial_lib::Q_COVERS: return "covers";
+            case spatial_lib::Q_CONTAINS: return "contains";
+            case spatial_lib::Q_MEET: return "meet";
+            case spatial_lib::Q_FIND_RELATION: return "find relation";
         }
     }
 

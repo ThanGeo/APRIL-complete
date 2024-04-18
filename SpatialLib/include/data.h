@@ -106,12 +106,16 @@ namespace spatial_lib
 
     typedef enum IntermediateFilterType{
         IF_NONE,
-        IF_APRIL,
+        IF_MARK_APRIL_BEGIN,
+        IF_APRIL_STANDARD = IF_MARK_APRIL_BEGIN,
+        IF_APRIL_FR,
+        IF_APRIL_OTF,
+        IF_MARK_APRIL_END
     } IntermediateFilterTypeE;
 
     typedef enum MBRFilterType {
-            MBR_FT_INTERSECTION_SIMPLE,
-            MBR_FT_FIND_RELATION,
+        MBR_FT_INTERSECTION_SIMPLE,
+        MBR_FT_FIND_RELATION,
     } MBRFilterTypeE;
 
     // APRIL data

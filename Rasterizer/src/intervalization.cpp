@@ -40,7 +40,7 @@ namespace rasterizerlib{
         return UNCERTAIN;
     }
 
-    static spatial_lib::AprilDataT* computeAllAndFullIntervals(polygon2d &polygon, uint32_t cellsPerDim, std::vector<uint32_t> &partialCells){
+    static spatial_lib::AprilDataT computeAllAndFullIntervals(polygon2d &polygon, uint32_t cellsPerDim, std::vector<uint32_t> &partialCells){
         int res;
         bool pip_res;
         uint32_t x,y, current_id;
@@ -49,7 +49,7 @@ namespace rasterizerlib{
         clock_t timer;
 
         // remember to delete after use
-        spatial_lib::AprilDataT* aprilData = new spatial_lib::AprilDataT;
+        spatial_lib::AprilDataT aprilData;
 
         //set first partial cell
         auto current_partial_cell = partialCells.begin();
@@ -112,14 +112,14 @@ namespace rasterizerlib{
         allIntervals.emplace_back(*(current_partial_cell-1) + 1);
 
         // store into the object
-        aprilData->intervalsALL = allIntervals;
-        aprilData->numIntervalsALL = allIntervals.size() / 2;
-        aprilData->intervalsFULL = fullIntervals;
-        aprilData->numIntervalsFULL = fullIntervals.size() / 2;
+        aprilData.intervalsALL = allIntervals;
+        aprilData.numIntervalsALL = allIntervals.size() / 2;
+        aprilData.intervalsFULL = fullIntervals;
+        aprilData.numIntervalsFULL = fullIntervals.size() / 2;
         return aprilData;
     }
 
-    static spatial_lib::AprilDataT* intervalize(polygon2d &polygon, uint32_t cellsPerDim){
+    static spatial_lib::AprilDataT intervalize(polygon2d &polygon, uint32_t cellsPerDim){
 
         uint32_t x,y;
         clock_t timer;
@@ -143,7 +143,7 @@ namespace rasterizerlib{
         return computeAllAndFullIntervals(polygon, cellsPerDim, partialCells);
     }
 
-    spatial_lib::AprilDataT* intervalizationBegin(polygon2d &polygon) {
+    spatial_lib::AprilDataT intervalizationBegin(polygon2d &polygon) {
         // safety checks
         if (g_config.celEnumType != CE_HILBERT) {
             log_err("can't intervalize on non-hilbert grids");
@@ -151,5 +151,61 @@ namespace rasterizerlib{
         
         // proceed to intervalization
         return intervalize(polygon, g_config.cellsPerDim);
+    }
+
+    /**
+     * @brief For boost geometry polygon
+     * 
+     */
+    spatial_lib::AprilDataT intervalizationBGPolygon(spatial_lib::bg_polygon &bg_polygon) {
+        uint32_t x,y;
+        clock_t timer;
+
+        // printConfig();
+
+        // set local object
+        polygon2d polygon;
+        polygon.bgPolygon = bg_polygon;
+        polygon.mbr.minPoint.x = std::numeric_limits<int>::max();
+		polygon.mbr.minPoint.y = std::numeric_limits<int>::max();
+		polygon.mbr.maxPoint.x = -std::numeric_limits<int>::max();
+		polygon.mbr.maxPoint.y = -std::numeric_limits<int>::max();
+
+        // printf("rasterizer: before map\n");
+        // for (auto &it : bg_polygon.outer()) {
+        //     printf("(%f,%f),", it.x(), it.y());
+        // }
+        // printf("\n");
+
+        //first of all map the polygon's coordinates to this section's hilbert space
+        mapBoostPolygonToHilbert(polygon, g_config.cellsPerDim);
+        
+        // printf("rasterizer: after map\n");
+        // for (auto &it : polygon.bgPolygon.outer()) {
+        //     printf("(%f,%f),", it.x(), it.y());
+        // }
+        // printf("\n");
+
+
+        // printf("rasterizer: mapped\n");
+
+        // compute partial cells
+        uint32_t **M = calculatePartialAndUncertainBGPolygon(polygon, g_config.cellsPerDim);
+        // printf("rasterizer: calculated partial and uncertain\n");
+        std::vector<uint32_t> partialCells;
+        partialCells = getPartialCellsFromMatrix(polygon, M);
+        // printf("rasterizer: got partial cells\n");
+        //sort the cells by cell uint32_t 
+        sort(partialCells.begin(), partialCells.end());
+        // delete the matrix memory, not needed anymore
+        for(size_t i = 0; i < polygon.rasterData.bufferWidth; i++){
+            delete M[i];
+        }
+        delete M;
+
+        // printf("rasterizer: calculated partial\n");
+
+        //compute all/full intervals
+        return computeAllAndFullIntervals(polygon, g_config.cellsPerDim, partialCells);
     }
 }

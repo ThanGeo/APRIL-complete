@@ -99,7 +99,7 @@ namespace two_layer
         ifstream file( filename, fstream::in | ios_base::binary);
         if(!file)
         {
-            cerr << "Cannot open the File : " << filename << endl;
+            cerr << "Cannot open the File: " << filename << endl;
             exit(1);
         }
 

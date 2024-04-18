@@ -42,11 +42,17 @@ Inside build/ directory, the executable 'main' is program executable.
 - - meet : r and s meet (touch)
 - - equal : r and s are geometrically equal
 - - find_relation : detect all relations between r and s
-- -m "keyword" : sets the "keyword" filter as the MBR filter (see configuration file for options)
-- -f "keyword" : sets the "keyword" filter as the intermediate filter (see configuration file for options)
+- -m "keyword" : sets the "keyword" filter as the MBR filter, options:
+- - MBR_STANDARD : standard MBR intersection filter (default)
+- - MBR_FR : specialized MBR filter for find relation queries
+- -f "keyword" : sets the "keyword" filter as the intermediate filter, options:
+- - "" : no intermediate filter (default)
+- - APRIL_STANDARD : standard APRIL intersection intermediate filter
+- - APRIL_FR : specialized APRIL intermediate filter for find relation queries
+- - APRIL_OTF : specialized APRIL intermediate filter for **find relation queries** that performs rasterization on the fly (no pre-processing)
 - -p "num" : sets "num" partitions for the APRIL approximation
 - -e : evaluates the query 10 times and prints the average times
-
+- -v "file" : export CSV with the results to "file". If file exists, then append the output
 
 ## Configuration Files
 ### config.ini

@@ -28,7 +28,7 @@
 
 std::string getDatasetNameFromPath(std::string &datasetPath);
 
-bool verifyDatasetPaths(std::string &datasetPath);
+bool verifydatasetNickname(std::string &datasetPath);
 bool verifyFileExists(std::string &filePath);
 bool verifyDirectoryExists(std::string &directoryPath);
 
@@ -41,6 +41,7 @@ void log_err_w_text(std::string errorText, std::string txt);
 void log_task(std::string text);
 void log_task_w_text(std::string text, std::string txt);
 void success_text(char* text);
+void success_text_with_number(char* text, int number);
 void success_text_with_time(char* text, double seconds);
 
 /**

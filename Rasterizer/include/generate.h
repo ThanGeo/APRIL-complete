@@ -7,7 +7,9 @@
 
 namespace rasterizerlib
 {
-    spatial_lib::AprilDataT* generate(polygon2d polygon, GenerateTypeE generateType);
+    spatial_lib::AprilDataT generate(polygon2d polygon, GenerateTypeE generateType);
+
+    spatial_lib::AprilDataT generateAPRILForBoostGeometry(spatial_lib::bg_polygon &polygon);
 }
 
 #endif

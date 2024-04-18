@@ -2,17 +2,73 @@
 #include "include/config.h"
 #include "include/parsing.h"
 
-void printResults(int runTimes) {
+static void exportCSV() {
+    // check if file exists
+    ofstream foutCSV;
+    if (verifyFileExists(g_config.actions.csvFilepath)) {
+        // exists, so append contents
+        foutCSV.open(g_config.actions.csvFilepath, fstream::out | ios_base::binary | ios_base::app);
+    } else {
+        // doesnt exist, create new file
+        foutCSV.open(g_config.actions.csvFilepath, fstream::out | ios_base::binary);
+    }
+    
+    // get settings
+    std::string settingsStr = getConfigSettingsStr();
+    foutCSV << settingsStr;
+    std::string header,contents = "";
+
+    switch (g_config.queryData.type) {
+        case spatial_lib::Q_INTERSECT:
+        case spatial_lib::Q_INSIDE:
+        case spatial_lib::Q_EQUAL:
+        case spatial_lib::Q_MEET:
+        case spatial_lib::Q_CONTAINS:
+        case spatial_lib::Q_COVERED_BY:
+        case spatial_lib::Q_COVERS:
+        case spatial_lib::Q_DISJOINT:
+            header = "Accepted%,Rejected%,Inconclusive%,MBR Filter time,Intermediate Filter time,Refinement time\n";
+            contents += std::to_string(spatial_lib::g_queryOutput.trueHits / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100) + "%,";
+            contents += std::to_string(spatial_lib::g_queryOutput.trueNegatives / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100) + "%,";
+            contents += std::to_string(spatial_lib::g_queryOutput.refinementCandidates / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100) + "%,";
+            contents += std::to_string(spatial_lib::g_queryOutput.totalTime - (spatial_lib::g_queryOutput.iFilterTime + spatial_lib::g_queryOutput.refinementTime)) + ",";
+            contents += std::to_string(spatial_lib::g_queryOutput.iFilterTime) + ",";
+            contents += std::to_string(spatial_lib::g_queryOutput.refinementTime);
+            break;
+        case spatial_lib::Q_FIND_RELATION:
+            header = "Inconclusive%,MBR Filter time,Intermediate Filter time,Refinement time\n";
+            contents += std::to_string(spatial_lib::g_queryOutput.refinementCandidates / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100) + "%,";
+            contents += std::to_string(spatial_lib::g_queryOutput.totalTime - (spatial_lib::g_queryOutput.iFilterTime + spatial_lib::g_queryOutput.refinementTime)) + ",";
+            contents += std::to_string(spatial_lib::g_queryOutput.iFilterTime) + ",";
+            contents += std::to_string(spatial_lib::g_queryOutput.refinementTime);
+            break;
+    }
+
+    // write
+    foutCSV << header;
+    foutCSV << contents;
+    foutCSV << std::endl << std::endl;
+
+    // close
+    foutCSV.close();
+}
+
+static void printResults(int runTimes) {
     spatial_lib::g_queryOutput.queryResults += spatial_lib::g_queryOutput.trueHits;
+    printf("Query '%s' on datasets %s and %s:\n",spatial_lib::queryTypeIntToText(g_config.queryData.type).c_str(), g_config.queryData.R.nickname.c_str(),g_config.queryData.S.nickname.c_str());
     printf("Repeats: %d\n", runTimes);
+    if (g_config.pipeline.iFilterType >= spatial_lib::IF_MARK_APRIL_BEGIN && g_config.pipeline.iFilterType < spatial_lib::IF_MARK_APRIL_END) {
+        printf("Partitions: %d\n", g_config.queryData.R.aprilConfig.partitions);
+        if(g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_OTF) {
+            printf("Rasterizations done: %u\n", spatial_lib::g_queryOutput.rasterizationsDone);
+        }
+    }
     printf("Total Time:\t\t %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime);
     printf("- MBR filter:\t\t %0.4f sec.\n", spatial_lib::g_queryOutput.totalTime - (spatial_lib::g_queryOutput.iFilterTime + spatial_lib::g_queryOutput.refinementTime));
     printf("- Intermediate filter:\t %0.4f sec.\n", spatial_lib::g_queryOutput.iFilterTime);
     printf("- Refinement:\t\t %0.4f sec.\n", spatial_lib::g_queryOutput.refinementTime);
-    printf("\n");
     printf("Post MBR filter:\t %d pairs.\n", spatial_lib::g_queryOutput.postMBRFilterCandidates);
     printf("Refinement Candidates:\t %d pairs (%0.2f%).\n", spatial_lib::g_queryOutput.refinementCandidates, spatial_lib::g_queryOutput.refinementCandidates / (double) spatial_lib::g_queryOutput.postMBRFilterCandidates * 100);
-    printf("\n");
     switch (g_config.queryData.type) {
         case spatial_lib::Q_INTERSECT:
         case spatial_lib::Q_INSIDE:
@@ -44,7 +100,7 @@ void printResults(int runTimes) {
     }
 }
 
-void freeMemory() {
+static void freeMemory() {
     
 }
 
@@ -91,6 +147,11 @@ int main(int argc, char *argv[]) {
 
     // print results
     printResults(runTimes);
+
+    // output to CSV
+    if (g_config.actions.exportCSV) {
+        exportCSV();
+    }
 
     // free any memory
     freeMemory();

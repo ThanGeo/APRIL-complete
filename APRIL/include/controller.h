@@ -2,6 +2,7 @@
 #define APRIL_CONTROLLER_H
 
 #include "SpatialLib.h"
+#include "Rasterizer.h"
 #include <fstream>
 
 #include "utils.h"
@@ -33,6 +34,26 @@ namespace APRIL
      * @param relationCase 
      */
     void IntermediateFilterFindRelationEntrypoint(uint idR, uint idS, int relationCase);
+
+    /**
+     * @brief Standard APRIL intermediate filter that detects disjoint and intersection pairs,
+     * but used for find relation queries. Non-disjoint pairs are refined using DE-9IM
+     * 
+     * 
+     * @param idR 
+     * @param idS 
+     */
+    void StandardIntermediateFilterEntrypoint(uint idR, uint idS);
+
+    /**
+     * @brief Intermediate filter called after the specialized find relation MBR Filter.
+     * Does not require APRIL pre-processing. Creates APRIL ON THE FLY!!!
+     * 
+     * @param idR 
+     * @param idS 
+     * @param relationCase 
+     */
+    void IntermediateFilterOnTheFlyEntrypoint(uint idR, uint idS, int relationCase);
 }
 
 #endif

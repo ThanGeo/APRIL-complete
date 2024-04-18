@@ -81,7 +81,7 @@ namespace APRIL
             aprilData.intervalsALL.insert(aprilData.intervalsALL.begin(), &loadSpace32[0], loadSpace32 + loadIndex);
 
             // add to dataset map
-            spatial_lib::addAprilDataToApproximationDataMap(dataset, sectionID, recID, aprilData);
+            spatial_lib::addAprilDataToApproximationDataMap(dataset, sectionID, recID, &aprilData);
             
             polCounter++;
         }
@@ -92,8 +92,8 @@ namespace APRIL
         free (buffer);
 
         /* ---------- FULL ---------- */
-        pFile = fopen(dataset.aprilConfig.FULL_intervals_path.c_str(), "rb");
         // obtain file size:
+        pFile = fopen(dataset.aprilConfig.FULL_intervals_path.c_str(), "rb");
         fseek (pFile , 0 , SEEK_END);
         fileSize = ftell (pFile);
         rewind (pFile);

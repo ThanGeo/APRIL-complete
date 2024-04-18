@@ -5,11 +5,11 @@ namespace rasterizerlib
 {
     
 
-    spatial_lib::AprilDataT* generate(polygon2d polygon, GenerateTypeE generateType) {
+    spatial_lib::AprilDataT generate(polygon2d polygon, GenerateTypeE generateType) {
         // safety checks
         if (!g_config.lib_init) {
             log_err("lib not initialized");
-            return NULL;
+            exit(-1);
         }
         // if(!checkIfPolygonIsInsideDataspace(polygon)){
         //     log_err("Polygon is not copletely inside the pre-defined data space");
@@ -40,8 +40,16 @@ namespace rasterizerlib
         } else {
             // unknown generate type
             log_err("Unknown generate type.");
-            return NULL;
+            exit(-1);
         }
-        return NULL;
     }
+
+
+    spatial_lib::AprilDataT generateAPRILForBoostGeometry(spatial_lib::bg_polygon &bg_polygon) {
+        // complete APRIL
+        return intervalizationBGPolygon(bg_polygon);
+    }
+
+
+
 }

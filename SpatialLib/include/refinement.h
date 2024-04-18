@@ -29,7 +29,7 @@ namespace spatial_lib
     /**
      * Loads geometries and refines for topology based on setup configuration.
     */
-    void refineFindRelationJoin(uint idR, uint idS);
+    void refineAllRelations(uint idR, uint idS);
 
     /**
      * refinement for the EQUAl topology relation
@@ -170,12 +170,22 @@ namespace spatial_lib
     int refineCoveredbyTrueHitIntersect(uint idR, uint idS);
 
 
+    /**
+     * @brief returns a bg polygon from disk using the offset map
+     * flag R indicates which file to load from (true = R, false = S)
+     * 
+     * @param id 
+     * @param flag 
+     * @return bg_polygon 
+     */
+    bg_polygon loadBoostPolygonByIDandFlag(uint id, bool R);
+
 
     /**
      * Entrypoint function for when there is NO intermediate filter.
      * Intermediate filters forward to refine() function and NOT this one.
     */
-    void specializedRefinementEntrypoint(uint idR, uint idS);
+    void specializedRefinementEntrypoint(uint idR, uint idS, int relationCase);
 
 }
 

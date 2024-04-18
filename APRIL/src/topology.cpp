@@ -350,21 +350,22 @@ namespace APRIL
     int equalMBRsAPRILUncompressed(uint idR, uint idS, spatial_lib::AprilDataT *aprilR, spatial_lib::AprilDataT *aprilS) {
         // printf("%u,%u\n", idR, idS);
         // AA join to look for exact relationship between the lists
-        int AAresult = joinIntervalListsSymmetricalOptimized(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL);
-        // printf("AA: %d\n", AAresult);
-        if (AAresult == spatial_lib::IL_DISJOINT) {
-            // true negative
-            return spatial_lib::TR_DISJOINT;
-        }
-         
+        // int AAresult = joinIntervalListsSymmetricalOptimized(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL);
+        int AAresult = joinIntervalListsSymmetricalOptimizedTrueHitIntersect(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL);
         if (AAresult == spatial_lib::IL_MATCH) {
             // AA symmetrical containment, happens in EQUAL
             // check if candidate for EQUAL
             if (aprilR->numIntervalsFULL && aprilS->numIntervalsFULL) {
                 int FF = joinIntervalsForMatch(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
+                // if (idR == 230945 && idS == 9127906) {
+                //     printf("%u,%u AA: %d FF: %d\n", idR, idS, AAresult, FF);
+                // }
                 if (FF == 1) {
                     // if full lists match, then the polygons might be EQUAL
                     // refine directly for equal
+                    // if (idR == 230945 && idS == 9127906) {
+                    //     printf("%u,%u refine equal: %d\n", idR, idS, spatial_lib::isEqual(idR, idS));
+                    // }
                     if (spatial_lib::isEqual(idR, idS)){
                         spatial_lib::g_queryOutput.refinementCandidates+=1;
                         return spatial_lib::TR_EQUAL;
@@ -378,6 +379,9 @@ namespace APRIL
                     return spatial_lib::TR_EQUAL;
                 }
             }
+        } else if (AAresult == spatial_lib::IL_INTERSECT) {
+            // AA no containment, true hit intersect because equal MBRs
+            return spatial_lib::TR_INTERSECT;
         }
         
         if (AAresult == spatial_lib::IL_R_INSIDE_S || AAresult == spatial_lib::IL_MATCH) {
@@ -386,8 +390,9 @@ namespace APRIL
                 int AFresult = joinIntervalsHybrid(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
                 // printf("AF: %d\n", AFresult);
                 if (AFresult == spatial_lib::IL_R_INSIDE_S) {
-                    // true hit covered by
-                    return spatial_lib::TR_COVERED_BY;
+                    // true hit covered by (return inside because reasons)
+                    // return spatial_lib::TR_COVERED_BY;
+                    return spatial_lib::TR_INSIDE;
                 } else if (AFresult == spatial_lib::IL_INTERSECT) {
                     // intersection between ALL-FULL
                     // no true hit for containment doesnt mean NO coverage
@@ -409,8 +414,9 @@ namespace APRIL
                 // in this case R is S because joinIntervalsHybrid handles the first list as R and the second as S
                 // and only checks for assymetrical containment R in S
                 if (FAresult == spatial_lib::IL_R_INSIDE_S) {
-                    // FA true hit covers
-                    return spatial_lib::TR_COVERS;
+                    // FA true hit covers, return contains
+                    // return spatial_lib::TR_COVERS;
+                    return spatial_lib::TR_CONTAINS;
                 } else if (FAresult == spatial_lib::IL_INTERSECT) {
                     // FA intersect
                     return spatial_lib::REFINE_COVERS_COVEREDBY_TRUEHIT_INTERSECT;
@@ -421,17 +427,17 @@ namespace APRIL
             }
         } 
 
-        int AFresult = intersectionJoinIntervalLists(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
-        if (AFresult) {
-            // true hit intersect, but candidate for some relations
-            return spatial_lib::TR_INTERSECT;
-        }
+        // int AFresult = intersectionJoinIntervalLists(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
+        // if (AFresult) {
+        //     // true hit intersect, but candidate for some relations
+        //     return spatial_lib::TR_INTERSECT;
+        // }
         
-        int FAresult = intersectionJoinIntervalLists(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsALL, aprilS->numIntervalsALL);
-        if (FAresult) {
-            // true hit intersect, but candidate for some relations
-            return spatial_lib::TR_INTERSECT;
-        }
+        // int FAresult = intersectionJoinIntervalLists(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsALL, aprilS->numIntervalsALL);
+        // if (FAresult) {
+        //     // true hit intersect, but candidate for some relations
+        //     return spatial_lib::TR_INTERSECT;
+        // }
 
         // refine for all relationships
         return spatial_lib::REFINE_COVERS_COVEREDBY_TRUEHIT_INTERSECT;
