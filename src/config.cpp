@@ -104,11 +104,18 @@ static bool verifyQuery(QueryStatementT *queryStmt) {
     }
 
     // verify combination of query + MBR filter
-    if ((itqt->second != spatial_lib::Q_FIND_RELATION && g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FIND_RELATION)) {
+    if ((itqt->second != spatial_lib::Q_FIND_RELATION) && g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FIND_RELATION) {
         // not allowed to use specialized MBR filter for non find relation queries
         log_err_w_text("'Find relation' MBR filter allowed only for 'find relation' queries. Not", queryStmt->queryType);
         return false;
     }
+    // verify combination of query + Intermediate filter
+    if ((itqt->second != spatial_lib::Q_FIND_RELATION) && (g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_FR || g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_OTF)) {
+        // not allowed to use specialized MBR filter for non find relation queries
+        log_err_w_text("'Find relation/OTF' APRIL filter allowed only for 'find relation' queries. Not", queryStmt->queryType);
+        return false;
+    }
+    
 
     return true;
 }
@@ -196,7 +203,6 @@ static bool verifyPipeline(std::string mbrFilterType, std::string intermediateFi
             return false;
         }
     }
-
     return true;
 }
 

@@ -18,42 +18,58 @@ namespace APRIL
      * TODO: if R and S have different april config, i might need to make a new method
     */
     void setupAPRILIntermediateFilter(spatial_lib::QueryT *query);
+    
+    namespace relate
+    {
+        /**
+         * Entrypoint function for the relate intermediate filter.
+         * 
+        */
+        void IntermediateFilterEntrypoint(uint idR, uint idS);
+    }
 
-    /**
-     * Entrypoint function for the intermediate filter.
-     * 
-    */
-    void IntermediateFilterEntrypoint(uint idR, uint idS);
+    namespace find_relation
+    {
 
+        namespace optimized
+        {
+            /**
+             * @brief Entrypoint function for the find relation intermediate filter
+             * 
+             * @param idR 
+             * @param idS 
+             * @param relationCase 
+             */
+            void IntermediateFilterFindRelationEntrypoint(uint idR, uint idS, int relationCase);
+        }
 
-    /**
-     * @brief Entrypoint function for the find relation intermediate filter
-     * 
-     * @param idR 
-     * @param idS 
-     * @param relationCase 
-     */
-    void IntermediateFilterFindRelationEntrypoint(uint idR, uint idS, int relationCase);
+        namespace standard 
+        {
+            /**
+             * @brief Standard APRIL intermediate filter that detects disjoint and intersection pairs,
+             * but used for find relation queries. Non-disjoint pairs are refined using DE-9IM
+             * 
+             * 
+             * @param idR 
+             * @param idS 
+             */
+            void StandardIntermediateFilterEntrypoint(uint idR, uint idS);
+        }
 
-    /**
-     * @brief Standard APRIL intermediate filter that detects disjoint and intersection pairs,
-     * but used for find relation queries. Non-disjoint pairs are refined using DE-9IM
-     * 
-     * 
-     * @param idR 
-     * @param idS 
-     */
-    void StandardIntermediateFilterEntrypoint(uint idR, uint idS);
+        namespace on_the_fly
+        {
+            /**
+             * @brief Intermediate filter called after the specialized find relation MBR Filter.
+             * Does not require APRIL pre-processing. Creates APRIL ON THE FLY!!!
+             * 
+             * @param idR 
+             * @param idS 
+             * @param relationCase 
+             */
+            void IntermediateFilteEntrypointOTF(uint idR, uint idS, int relationCase);
+        }
+    }
 
-    /**
-     * @brief Intermediate filter called after the specialized find relation MBR Filter.
-     * Does not require APRIL pre-processing. Creates APRIL ON THE FLY!!!
-     * 
-     * @param idR 
-     * @param idS 
-     * @param relationCase 
-     */
-    void IntermediateFilterOnTheFlyEntrypoint(uint idR, uint idS, int relationCase);
 }
 
 #endif

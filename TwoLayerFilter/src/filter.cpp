@@ -18,10 +18,10 @@ namespace two_layer
         inline void forwardPair(uint idR, uint idS) {
             switch (g_iFilterType) {
                 case spatial_lib::IF_APRIL_FR:
-                    APRIL::IntermediateFilterEntrypoint(idR, idS);
+                    APRIL::relate::IntermediateFilterEntrypoint(idR, idS);
                     break;
                 case spatial_lib::IF_APRIL_STANDARD:
-                    APRIL::StandardIntermediateFilterEntrypoint(idR,idS);
+                    APRIL::find_relation::standard::StandardIntermediateFilterEntrypoint(idR,idS);
                     break;
                 case spatial_lib::IF_APRIL_OTF:
                     printf("Call the appropriate APRIL OTF filter.\n");
@@ -371,7 +371,7 @@ namespace two_layer
                 case spatial_lib::IF_APRIL_FR:
                     if (relationCase != spatial_lib::MBR_CROSS) {
                         // forward to intermediate filter
-                        APRIL::IntermediateFilterFindRelationEntrypoint(idR, idS, relationCase);
+                        APRIL::find_relation::optimized::IntermediateFilterFindRelationEntrypoint(idR, idS, relationCase);
                     } else {
                         // they cross, true hit intersect (skip intermediate filter)
                         spatial_lib::countTopologyRelationResult(spatial_lib::TR_INTERSECT);
@@ -386,7 +386,7 @@ namespace two_layer
                 case spatial_lib::IF_APRIL_OTF:
                     if (relationCase != spatial_lib::MBR_CROSS) {
                         // forward to intermediate filter
-                        APRIL::IntermediateFilterOnTheFlyEntrypoint(idR, idS, relationCase);
+                        APRIL::find_relation::on_the_fly::IntermediateFilteEntrypointOTF(idR, idS, relationCase);
                     } else {
                         // they cross, true hit intersect (skip intermediate filter)
                         spatial_lib::countTopologyRelationResult(spatial_lib::TR_INTERSECT);
