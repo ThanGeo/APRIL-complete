@@ -36,7 +36,7 @@ namespace two_layer
     /**
      * requires datasets to be loaded to work. Calculates global bounds based on the dataset bounds.
     */
-    void initTwoLayer(uint partitionsPerDimension, spatial_lib::MBRFilterTypeE mbrFilterType);
+    void initTwoLayer(uint partitionsPerDimension, spatial_lib::MBRFilterTypeE mbrFilterType, spatial_lib::QueryTypeE queryType);
 
     /**
      * requires datasets to be loaded to work. Sets hardcoded global bounds.

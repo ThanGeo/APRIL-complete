@@ -54,6 +54,7 @@ namespace spatial_lib
         REFINE_COVEREDBY_TRUEHIT_INTERSECT,
         REFINE_COVERS_TRUEHIT_INTERSECT,
         REFINE_COVERS_COVEREDBY_TRUEHIT_INTERSECT,
+        REFINE_EQUAL_COVERS_COVEREDBY_TRUEHIT_INTERSECT,
     } TopologyRelationE;
 
     // spatial data types
@@ -110,12 +111,14 @@ namespace spatial_lib
         IF_APRIL_STANDARD = IF_MARK_APRIL_BEGIN,
         IF_APRIL_FR,
         IF_APRIL_OTF,
+        IF_APRIL_SCALABILITY,
         IF_MARK_APRIL_END
     } IntermediateFilterTypeE;
 
     typedef enum MBRFilterType {
         MBR_FT_INTERSECTION_SIMPLE,
         MBR_FT_FIND_RELATION,
+        MBR_FT_FR_SCALABILITY,
     } MBRFilterTypeE;
 
     // APRIL data

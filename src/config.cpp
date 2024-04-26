@@ -22,6 +22,8 @@ static std::unordered_map<std::string, spatial_lib::IntermediateFilterTypeE> int
     {"APRIL_STANDARD",spatial_lib::IF_APRIL_STANDARD},
     {"APRIL_FR",spatial_lib::IF_APRIL_FR},
     {"APRIL_OTF",spatial_lib::IF_APRIL_OTF},
+    {"APRIL_FR_SCALABILITY",spatial_lib::IF_APRIL_SCALABILITY},
+
     // {"RI",spatial_lib::AT_RI},
     // {"5CCA",spatial_lib::AT_5CCH},
     // {"GEOS",spatial_lib::AT_GEOS},
@@ -31,6 +33,7 @@ static std::unordered_map<std::string, spatial_lib::IntermediateFilterTypeE> int
 static std::unordered_map<std::string, int> mbrFilterStringToIntMap = {
     {"MBR_STANDARD",spatial_lib::MBR_FT_INTERSECTION_SIMPLE},
     {"MBR_FR",spatial_lib::MBR_FT_FIND_RELATION},
+    {"MBR_FR_SCALABILITY",spatial_lib::MBR_FT_FR_SCALABILITY},
     };
 
 static std::string iFilterTypeIntToText(int val){
@@ -39,6 +42,7 @@ static std::string iFilterTypeIntToText(int val){
         case spatial_lib::IF_APRIL_STANDARD: return "APRIL STANDARD";
         case spatial_lib::IF_APRIL_FR: return "APRIL FIND RELATION";
         case spatial_lib::IF_APRIL_OTF: return "APRIL ON THE FLY";
+        case spatial_lib::IF_APRIL_SCALABILITY: return "APRIL FIND RELATION SCALABILITY TEST";
     }
 }
 
@@ -46,6 +50,7 @@ static std::string mbrFilterTypeIntToText(int val){
     switch(val) {
         case spatial_lib::MBR_FT_INTERSECTION_SIMPLE: return "STANDARD MBR FILTER";
         case spatial_lib::MBR_FT_FIND_RELATION: return "FIND RELATION MBR FILTER";
+        case spatial_lib::MBR_FT_FR_SCALABILITY: return "FIND RELATION SCALABILITY MBR FILTER";
     }
 }
 
@@ -104,17 +109,18 @@ static bool verifyQuery(QueryStatementT *queryStmt) {
     }
 
     // verify combination of query + MBR filter
-    if ((itqt->second != spatial_lib::Q_FIND_RELATION) && g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FIND_RELATION) {
+    if ((itqt->second != spatial_lib::Q_FIND_RELATION) && (g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FIND_RELATION || g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FR_SCALABILITY)) {
         // not allowed to use specialized MBR filter for non find relation queries
         log_err_w_text("'Find relation' MBR filter allowed only for 'find relation' queries. Not", queryStmt->queryType);
         return false;
     }
     // verify combination of query + Intermediate filter
-    if ((itqt->second != spatial_lib::Q_FIND_RELATION) && (g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_FR || g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_OTF)) {
-        // not allowed to use specialized MBR filter for non find relation queries
-        log_err_w_text("'Find relation/OTF' APRIL filter allowed only for 'find relation' queries. Not", queryStmt->queryType);
-        return false;
-    }
+    // if ((itqt->second != spatial_lib::Q_FIND_RELATION) && (g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_FR 
+    // || g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_OTF || g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_SCALABILITY)) {
+    //     // not allowed to use specialized MBR filter for non find relation queries
+    //     log_err_w_text("'Find relation/OTF' APRIL filter allowed only for 'find relation' queries. Not", queryStmt->queryType);
+    //     return false;
+    // }
     
 
     return true;
@@ -407,6 +413,14 @@ static void matchSections(spatial_lib::DatasetT &datasetR, spatial_lib::DatasetT
     }
 }
 
+/**
+ * @brief works only for custom testing EU. Hardcoded file paths etc.
+ * 
+ */
+static void initScalabilityTesting() {
+    spatial_lib::setupScalabilityTesting();
+}
+
 static void initAPRIL() {
 
     // create if requested
@@ -495,7 +509,6 @@ static void loadDataset(std::string &filepath, bool left) {
     //read polygons
     for(int j=0; j<polygonCount; j++){
 
-        // printf("pol %d\n", j);
         two_layer::Coord minXmbr, minYmbr, maxXmbr, maxYmbr;
         minXmbr = std::numeric_limits<two_layer::Coord>::max();
         maxXmbr = -std::numeric_limits<two_layer::Coord>::max();
@@ -517,13 +530,13 @@ static void loadDataset(std::string &filepath, bool left) {
             minYmbr = std::min(minYmbr, y);
             maxYmbr = std::max(maxYmbr, y);
             
-            
-            // if (recID == 672181 || recID == 3913769) {
+            // if (recID == 4320271 || recID == 5510423) {
             //     printf("(%f,%f),",x,y);
             // }
         }
-        // if (recID == 672181 || recID == 3913769) {
-        //     printf("\n\n");    
+        
+        // if (recID == 4320271 || recID == 5510423) {
+        //     printf("\n^ polygon %u\n\n", recID);    
         // }
 
         // MBR
@@ -583,10 +596,15 @@ void initConfig() {
             success_text("Calculated global bounds based on dataset bounds.");
         }
         case spatial_lib::MBR_FT_INTERSECTION_SIMPLE:
-            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_INTERSECTION_SIMPLE);
+            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_INTERSECTION_SIMPLE, g_config.queryData.type);
             break;
         case spatial_lib::MBR_FT_FIND_RELATION:
-            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_FIND_RELATION);
+            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_FIND_RELATION, g_config.queryData.type);
+            break;
+        case spatial_lib::MBR_FT_FR_SCALABILITY:
+            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_FR_SCALABILITY, g_config.queryData.type);
+            // init scalability stuff
+            initScalabilityTesting();
             break;
         default:
             log_err_w_text("Invalid selection of MBR filter.", std::to_string(g_config.pipeline.MBRFilterType));
@@ -613,6 +631,12 @@ void initConfig() {
             initAPRILOTF();
             // set as next stage after two-layer MBR filter
             two_layer::setNextStage(spatial_lib::IF_APRIL_OTF);
+            break;
+        case spatial_lib::IF_APRIL_SCALABILITY:
+            // init APRIL
+            initAPRIL();
+            // set as next stage after two-layer MBR filter
+            two_layer::setNextStage(spatial_lib::IF_APRIL_SCALABILITY);
             break;
         case spatial_lib::IF_NONE:
             // set refinement as next stage

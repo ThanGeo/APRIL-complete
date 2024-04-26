@@ -318,9 +318,13 @@ namespace APRIL
     }
 
     int joinIntervalsForMatch(std::vector<uint> &ar1, uint &numintervals1, std::vector<uint> &ar2, uint &numintervals2){
-        //they may not have any intervals of this type
-        if(numintervals1 == 0 || numintervals2 == 0){
+        // if interval lists have different sizes (or both are 0) then they cannot match
+        if(numintervals1 != numintervals2){
             return 0;
+        }
+        // if both are zero, they match
+        if(numintervals1 == 0 && numintervals2 == 0) {
+            return 1;
         }
         
         // ID st1,st2,end1,end2;

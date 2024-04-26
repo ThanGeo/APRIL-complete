@@ -1,4 +1,4 @@
-#ifndef APRIL_CONTROLLER_H
+    #ifndef APRIL_CONTROLLER_H
 #define APRIL_CONTROLLER_H
 
 #include "SpatialLib.h"
@@ -21,11 +21,25 @@ namespace APRIL
     
     namespace relate
     {
-        /**
-         * Entrypoint function for the relate intermediate filter.
-         * 
-        */
-        void IntermediateFilterEntrypoint(uint idR, uint idS);
+        namespace standard
+        {
+            /**
+             * Entrypoint function for the standard APRIL relate intermediate filter.
+             * standard MBR intersection filter forwards to this function.
+             * 
+            */
+            void IntermediateFilterEntrypoint(uint idR, uint idS);
+        }
+
+        namespace optimized
+        {
+            /**
+             * Entrypoint function for the optimized APRIL relate intermediate filter.
+             * optimized MBR filter forwards to this function
+             * 
+            */
+            void IntermediateFilterEntrypoint(uint idR, uint idS);
+        }
     }
 
     namespace find_relation
@@ -40,7 +54,7 @@ namespace APRIL
              * @param idS 
              * @param relationCase 
              */
-            void IntermediateFilterFindRelationEntrypoint(uint idR, uint idS, int relationCase);
+            void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase);
         }
 
         namespace standard 
@@ -66,9 +80,23 @@ namespace APRIL
              * @param idS 
              * @param relationCase 
              */
-            void IntermediateFilteEntrypointOTF(uint idR, uint idS, int relationCase);
+            void IntermediateFilterEntrypointOTF(uint idR, uint idS, int relationCase);
         }
+
+        namespace scalability_test
+        {
+            /**
+             * @brief Entrypoint function for the find relation intermediate filter
+             * 
+             * @param idR 
+             * @param idS 
+             * @param relationCase 
+             */
+            void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase);
+        }
+        
     }
+
 
 }
 

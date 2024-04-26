@@ -19,9 +19,14 @@ namespace two_layer
      * @brief performs an specialized version of two-layer mbr filter for find relation queries
      * 
      */
-    namespace find_relation
+    namespace optimized
     {
-         unsigned long long FindRelationMBRFilter(Relation *pR, Relation *pS, size_t *pRA_size, size_t *pSA_size, size_t *pRB_size, size_t *pSB_size, size_t *pRC_size, size_t *pSC_size, size_t *pRD_size, size_t *pSD_size, int runNumPartition);
+        unsigned long long FindRelationMBRFilter(Relation *pR, Relation *pS, size_t *pRA_size, size_t *pSA_size, size_t *pRB_size, size_t *pSB_size, size_t *pRC_size, size_t *pSC_size, size_t *pRD_size, size_t *pSD_size, int runNumPartition);
+    }
+
+    namespace optimized_scalability
+    {
+        unsigned long long FindRelationMBRFilter(Relation *pR, Relation *pS, size_t *pRA_size, size_t *pSA_size, size_t *pRB_size, size_t *pSB_size, size_t *pRC_size, size_t *pSC_size, size_t *pRD_size, size_t *pSD_size, int runNumPartition);
     }
 }
 

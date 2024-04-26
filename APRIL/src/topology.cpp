@@ -353,49 +353,8 @@ namespace APRIL
         // int AAresult = joinIntervalListsSymmetricalOptimized(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL);
         int AAresult = joinIntervalListsSymmetricalOptimizedTrueHitIntersect(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL);
         if (AAresult == spatial_lib::IL_MATCH) {
-            // AA symmetrical containment, happens in EQUAL
-            // check if candidate for EQUAL
-            if (aprilR->numIntervalsFULL && aprilS->numIntervalsFULL) {
-                int FF = joinIntervalsForMatch(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
-                // if (idR == 230945 && idS == 9127906) {
-                //     printf("%u,%u AA: %d FF: %d\n", idR, idS, AAresult, FF);
-                // }
-                if (FF == 1) {
-                    // if full lists match, then the polygons might be EQUAL
-                    // refine directly for equal
-                    // if (idR == 230945 && idS == 9127906) {
-                    //     printf("%u,%u refine equal: %d\n", idR, idS, spatial_lib::isEqual(idR, idS));
-                    // }
-                    if (spatial_lib::isEqual(idR, idS)){
-                        spatial_lib::g_queryOutput.refinementCandidates+=1;
-                        return spatial_lib::TR_EQUAL;
-                    }
-                }
-            } else if (!aprilR->numIntervalsFULL && !aprilS->numIntervalsFULL) {
-                // if either has full, also possibly EQUAL
-                // refine directly
-                if (spatial_lib::isEqual(idR, idS)){
-                    spatial_lib::g_queryOutput.refinementCandidates+=1;
-                    return spatial_lib::TR_EQUAL;
-                }
-            }            
-            // check R in S containment
-            int AFresult = joinIntervalsHybrid(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
-            if (AFresult == spatial_lib::IL_R_INSIDE_S) {
-                // true hit covered by (return inside because reasons)
-                // return spatial_lib::TR_COVERED_BY;
-                return spatial_lib::TR_INSIDE;
-            } 
-            // check S in R containment
-            int FAresult = joinIntervalsHybrid(aprilS->intervalsALL, aprilS->numIntervalsALL, aprilR->intervalsFULL, aprilR->numIntervalsFULL);
-            if (FAresult == spatial_lib::IL_R_INSIDE_S) {
-                // FA true hit covers, return contains
-                // return spatial_lib::TR_COVERS;
-                return spatial_lib::TR_CONTAINS;
-            }
-            // AF and FA intersect or disjoint
-            return spatial_lib::REFINE_COVERS_COVEREDBY_TRUEHIT_INTERSECT;
-            
+            // refine for equal, covered by, covers and true hit intersect
+            return spatial_lib::REFINE_EQUAL_COVERS_COVEREDBY_TRUEHIT_INTERSECT;
         } else if (AAresult == spatial_lib::IL_R_INSIDE_S) {
             int AFresult = joinIntervalsHybrid(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsFULL, aprilS->numIntervalsFULL);
             // printf("AF: %d\n", AFresult);
@@ -420,6 +379,10 @@ namespace APRIL
             return spatial_lib::REFINE_COVERS_TRUEHIT_INTERSECT;
         } else {
             // AA no containment, true hit intersect because equal MBRs
+            // maybe a special case of meet, so refine first
+            if(spatial_lib::isMeet(idR, idS)){
+                return spatial_lib::TR_MEET;
+            }
             return spatial_lib::TR_INTERSECT;
         }
     }

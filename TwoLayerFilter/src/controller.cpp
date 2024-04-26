@@ -16,9 +16,11 @@ namespace two_layer
 
     unsigned long long result = 0;
     
-    void initTwoLayer(uint partitionsPerDimension, spatial_lib::MBRFilterTypeE mbrFilterType) {
+    void initTwoLayer(uint partitionsPerDimension, spatial_lib::MBRFilterTypeE mbrFilterType, spatial_lib::QueryTypeE queryType) {
         // set type
         g_mbrFilterType = mbrFilterType;
+        g_queryType = queryType;
+        
         // get global boundaries of datasets
         Coord minX = min(R.minX, S.minX);
         Coord maxX = max(R.maxX, S.maxX);
@@ -156,7 +158,9 @@ namespace two_layer
             case spatial_lib::MBR_FT_INTERSECTION_SIMPLE:
                 return intersection::ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
             case spatial_lib::MBR_FT_FIND_RELATION:
-                return find_relation::FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+                return optimized::FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+            case spatial_lib::MBR_FT_FR_SCALABILITY:
+                return optimized_scalability::FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
             default:
                 printf("Two-layer filter error: unkown MBR filter type\n");
                 exit(-1);

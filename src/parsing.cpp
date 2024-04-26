@@ -170,6 +170,7 @@ static void parseIntermediateFilterOptions(iFilterStatementT *iFilterStmt) {
         case spatial_lib::IF_APRIL_FR:
         case spatial_lib::IF_APRIL_STANDARD:
         case spatial_lib::IF_APRIL_OTF:
+        case spatial_lib::IF_APRIL_SCALABILITY:
             parseAPRILoptions(iFilterStmt);
             break;
         case spatial_lib::AT_NONE:

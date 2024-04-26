@@ -89,6 +89,11 @@ namespace spatial_lib
     bool isEqual(uint idR, uint idS);
 
     /**
+     * refine for EQUAl for APRIL
+     */
+    bool isMeet(uint idR, uint idS);
+
+    /**
      * refines for ALL relations except EQUAL
     */
     int refineAllRelationsNoEqual(uint idR, uint idS);
@@ -151,6 +156,15 @@ namespace spatial_lib
     int refineCoversCoveredByTrueHitIntersect(uint idR, uint idS);
 
     /**
+     * @brief refines for equal, covers, covered by but is guaranteed intersection (no disjoint)
+     * 
+     * @param idR 
+     * @param idS 
+     * @return int 
+     */
+    int refineEqualCoversCoveredByTrueHitIntersect(uint idR, uint idS);
+
+    /**
      * @brief refines for covers but is guaranteed intersection (no disjoint)
      * 
      * @param idR 
@@ -186,6 +200,15 @@ namespace spatial_lib
      * Intermediate filters forward to refine() function and NOT this one.
     */
     void specializedRefinementEntrypoint(uint idR, uint idS, int relationCase);
+    
+    namespace scalability
+    {
+        /**
+         * Entrypoint function for when there is NO intermediate filter.
+         * Intermediate filters forward to refine() function and NOT this one.
+        */
+        void specializedRefinementEntrypoint(uint idR, uint idS, int relationCase);
+    }
 
 }
 

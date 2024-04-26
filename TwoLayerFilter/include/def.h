@@ -66,9 +66,9 @@ using namespace std;
 namespace two_layer 
 {
         
-
         extern spatial_lib::IntermediateFilterTypeE g_iFilterType;
         extern spatial_lib::MBRFilterTypeE g_mbrFilterType;
+        extern spatial_lib::QueryTypeE g_queryType;
 
         #define EPS 1e-08
 

@@ -98,6 +98,14 @@ static void printResults(int runTimes) {
 
             break;
     }
+    if (g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_SCALABILITY || g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FR_SCALABILITY) {
+        for(int i=0; i<spatial_lib::g_scalContainer.numberOfBuckets; i++) {
+            printf("Bucket %d:\n",i);
+            printf("\tInconclusive pairs: %u\n", spatial_lib::g_scalContainer.bucketInconclusiveCount[i]);
+            printf("\tIntermediate filter time: %f\n", spatial_lib::g_scalContainer.bucketIfilterTime[i]);
+            printf("\tRefinement time: %f\n", spatial_lib::g_scalContainer.bucketRefinementTime[i]);
+        }
+    }
 }
 
 static void freeMemory() {

@@ -335,6 +335,15 @@ namespace spatial_lib
         return refineEqual(&boostPolygonR, &boostPolygonS);
     }
 
+    bool isMeet(uint idR, uint idS) {
+        // load boost polygons
+        bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        // refine
+        return refineMeet(&boostPolygonR, &boostPolygonS);
+    }
+
     int refineAllRelationsNoEqual(uint idR, uint idS) {
         bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
         bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
@@ -653,6 +662,39 @@ namespace spatial_lib
         return TR_INTERSECT;
     }
 
+    int refineEqualCoversCoveredByTrueHitIntersect(uint idR, uint idS) {
+        // load boost polygons
+        bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        // get the mask code
+	    std::string code = createMaskCode(&boostPolygonR, &boostPolygonS);
+
+        // equal
+        if(compareMasks(code, equalCode)) {
+            return TR_EQUAL;
+        }
+        
+        // covers
+        if (compareMasks(code, coversCode1) || compareMasks(code, coversCode2) || 
+            compareMasks(code, coversCode3) || compareMasks(code, coversCode4)) {
+            // return TR_COVERS;
+            // instead of covers, classify as contains for consistency with the DE-9IM
+            return TR_CONTAINS;
+        }
+
+        // covered by
+        if (compareMasks(code, coveredbyCode1) || compareMasks(code, coveredbyCode2) || 
+            compareMasks(code, coveredbyCode3) || compareMasks(code, coveredbyCode4)) {
+            // return TR_COVERED_BY;
+            // instead of covers, classify as contains for consistency with the DE-9IM
+            return TR_INSIDE;
+        }
+
+        // intersect
+        return TR_INTERSECT;
+    }
+
 
     int refineCoversTrueHitIntersect(uint idR, uint idS) {
         // load boost polygons
@@ -761,6 +803,50 @@ namespace spatial_lib
 
         // store time
         g_queryOutput.refinementTime += time::getElapsedTime(time::g_timer.refTimer);
+    }
+
+    namespace scalability
+    {
+        void specializedRefinementEntrypoint(uint idR, uint idS, int relationCase) {
+            // time
+            time::markRefinementFilterTimer();
+            // count post mbr candidate
+            g_queryOutput.postMBRFilterCandidates += 1;
+            g_queryOutput.refinementCandidates += 1;
+
+            // get bucket
+            uint bucketID = getBucketOfPair(idR, idS);
+            countInconclusiveToBucket(bucketID);
+            
+            int refinementResult;
+
+            switch(relationCase) {
+                case MBR_R_IN_S:
+                    refinementResult = refineDisjointInsideCoveredbyMeetIntersect(idR, idS);
+                    break;
+                case MBR_S_IN_R:
+                    refinementResult = refineDisjointContainsCoversMeetIntersect(idR,idS);
+                    break;
+                case MBR_EQUAL:
+                    refinementResult = refineEqualCoversCoveredbyTrueHitIntersect(idR, idS);
+                    break;
+                case MBR_INTERSECT:
+                    refinementResult = refineDisjointMeetIntersect(idR, idS);
+                    break;
+                default:
+                    fprintf(stderr, "Failed. No refinement support for this relation case.\n");
+                    exit(-1);
+                    break;
+            }
+
+            // count result
+            countTopologyRelationResult(refinementResult);
+
+            // store time
+            double elapsedTime = time::getElapsedTime(time::g_timer.refTimer);
+            g_queryOutput.refinementTime += elapsedTime;
+            addRefinementTimeToBucket(bucketID, elapsedTime);
+        }
     }
 
 
