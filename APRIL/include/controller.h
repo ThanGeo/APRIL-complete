@@ -19,24 +19,16 @@ namespace APRIL
     */
     void setupAPRILIntermediateFilter(spatial_lib::QueryT *query);
     
-    namespace find_relation
+    namespace optimized
     {
-
-        namespace optimized
-        {
-            /**
-             * @brief Entrypoint function for the find relation intermediate filter
-             * 
-             * @param idR 
-             * @param idS 
-             * @param relationCase 
-             */
-            void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase);
-        }
-
-        
-
-        
+        /**
+         * @brief Entrypoint function for the find relation intermediate filter
+         * 
+         * @param idR 
+         * @param idS 
+         * @param relationCase 
+         */
+        void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase);
     }
 
     namespace on_the_fly

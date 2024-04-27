@@ -158,9 +158,25 @@ namespace two_layer
             case spatial_lib::MF_STANDARD:
                 return standard::ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
             case spatial_lib::MF_OPTIMIZED:
-                return optimized::FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+                
+                switch (g_queryType) {
+                    case spatial_lib::Q_CONTAINS:
+                    case spatial_lib::Q_COVERED_BY:
+                    case spatial_lib::Q_COVERS:
+                    case spatial_lib::Q_DISJOINT:
+                    case spatial_lib::Q_EQUAL:
+                    case spatial_lib::Q_INSIDE:
+                    case spatial_lib::Q_INTERSECT:
+                    case spatial_lib::Q_MEET:
+                        return optimized::relate::MBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+                        break;
+                    case spatial_lib::Q_FIND_RELATION:
+                        return optimized::find_relation::MBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+                        break;
+                }
+                
             case spatial_lib::MF_SCALABILITY:
-                return optimized_scalability::FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+                return optimized_scalability::MBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
             default:
                 printf("Two-layer filter error: unkown MBR filter type\n");
                 exit(-1);

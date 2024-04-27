@@ -8,25 +8,274 @@ namespace APRIL
         // store query info
         g_query = query;
     }
-
-    /************************************************/
-
-    namespace find_relation
+    
+    namespace optimized
     {
-
-        /************************************************/
-        /**
-         * FIND RELATION
-        */
-        /************************************************/
-
-        namespace optimized
+        namespace relate
         {
-            /************************************************/
             /**
-             * SPECIALIZED TOPOLOGY
+             * WARNING: standard and optimized relate functions are THE SAME right now, but I keep separated because future optimization might happen.
+             * 
             */
-            /************************************************/
+
+            static void APRILIntersectionFilter(uint idR, uint idS) {
+                // get common sections
+                std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+                // for each common section
+                for (auto &sectionID : commonSections) {
+                    // fetch the APRIL of R and S for this section
+                    spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+                    spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+                    // use APRIL intermediate filter
+                    int iFilterResult = intersectionAPRILUncompressed(aprilR, aprilS);
+                    if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+                        // true negative or true hit, return
+                        // measure time
+                        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                        // count result
+                        spatial_lib::countAPRILResult(iFilterResult);
+                        return;
+                    }
+                }
+                // i filter ended, measure time
+                spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                
+                // count refinement candidate
+                spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+                // refinement
+                spatial_lib::time::markRefinementFilterTimer();
+                spatial_lib::refineIntersectionJoin(idR, idS);
+                spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+            }
+
+            static void APRILInsideFilter(uint idR, uint idS) {
+                // get common sections
+                std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+                // for each common section
+                for (auto &sectionID : commonSections) {
+                    // fetch the APRIL of R and S for this section
+                    spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+                    spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+                    // use APRIL intermediate filter
+                    int iFilterResult = insideAPRILUncompressed(aprilR, aprilS);
+                    if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+                        // true negative or true hit, return
+                        // measure time
+                        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                        // count result
+                        spatial_lib::countAPRILResult(iFilterResult);
+                        return;
+                    }
+                }
+                // i filter ended, measure time
+                spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                
+                // count refinement candidate
+                spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+                // refinement
+                spatial_lib::time::markRefinementFilterTimer();
+                spatial_lib::refineInsideJoin(idR, idS);
+                spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+            }
+
+            static void APRILDisjointFilter(uint idR, uint idS) {
+                // get common sections
+                std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+                // for each common section
+                for (auto &sectionID : commonSections) {
+                    // fetch the APRIL of R and S for this section
+                    spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+                    spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+                    // use APRIL intermediate filter
+                    int iFilterResult = disjointAPRILUncompressed(aprilR, aprilS);
+                    if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+                        // true negative or true hit, return
+                        // measure time
+                        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                        // count result
+                        spatial_lib::countAPRILResult(iFilterResult);
+                        return;
+                    }
+                }
+                // i filter ended, measure time
+                spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+            
+                // count result
+                spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+                // refinement
+                spatial_lib::time::markRefinementFilterTimer();
+                spatial_lib::refineDisjointJoin(idR, idS);
+                spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+            }
+
+            static void APRILEqualFilter(uint idR, uint idS) {
+                // get common sections
+                std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+                // for each common section
+                for (auto &sectionID : commonSections) {
+                    // fetch the APRIL of R and S for this section
+                    spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+                    spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+                    // use APRIL intermediate filter
+                    int iFilterResult = equalAPRILUncompressed(aprilR, aprilS);
+                    if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+                        // true negative or true hit, return
+                        // measure time
+                        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                        // count result
+                        spatial_lib::countAPRILResult(iFilterResult);
+                        return;
+                    }
+                }
+                // i filter ended, measure time
+                spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+            
+                // count result
+                spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+                // refinement
+                spatial_lib::time::markRefinementFilterTimer();
+                spatial_lib::refineEqualJoin(idR, idS);
+                spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+            }
+
+            static void APRILMeetFilter(uint idR, uint idS) {
+                // get common sections
+                std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+                // for each common section
+                for (auto &sectionID : commonSections) {
+                    // fetch the APRIL of R and S for this section
+                    spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+                    spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+                    // use APRIL intermediate filter
+                    int iFilterResult = meetAPRILUncompressed(aprilR, aprilS);
+                    if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+                        // true negative or true hit, return
+                        // measure time
+                        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                        // count result
+                        spatial_lib::countAPRILResult(iFilterResult);
+                        return;
+                    }
+                }
+                // i filter ended, measure time
+                spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+            
+                // count result
+                spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+                
+                // refinement
+                spatial_lib::time::markRefinementFilterTimer();
+                spatial_lib::refineMeetJoin(idR, idS);
+                spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+            }
+
+            static void APRILContainsFilter(uint idR, uint idS) {
+                // get common sections
+                std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+                // for each common section
+                for (auto &sectionID : commonSections) {
+                    // fetch the APRIL of R and S for this section
+                    spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+                    spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+                    // use APRIL intermediate filter
+                    int iFilterResult = containsAPRILUncompressed(aprilR, aprilS);
+                    if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+                        // true negative or true hit, return
+                        // measure time
+                        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                        // count result
+                        spatial_lib::countAPRILResult(iFilterResult);
+                        return;
+                    }
+                }
+                // i filter ended, measure time
+                spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+            
+                // count result
+                spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+                // refinement
+                spatial_lib::time::markRefinementFilterTimer();
+                spatial_lib::refineContainsJoin(idR, idS);
+                spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+            }
+
+            static void APRILCoversFilter(uint idR, uint idS) {
+                // get common sections
+                std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+                // for each common section
+                for (auto &sectionID : commonSections) {
+                    // fetch the APRIL of R and S for this section
+                    spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+                    spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+                    // use APRIL intermediate filter
+                    int iFilterResult = coversAPRILUncompressed(aprilR, aprilS);
+                    if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+                        // true negative or true hit, return
+                        // measure time
+                        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                        // count result
+                        spatial_lib::countAPRILResult(iFilterResult);
+                        return;
+                    }
+                }
+                // i filter ended, measure time
+                spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+            
+                // count result
+                spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+                
+                // refinement
+                spatial_lib::time::markRefinementFilterTimer();
+                spatial_lib::refineCoversJoin(idR, idS);
+                spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+            }
+
+            static void APRILCoveredByFilter(uint idR, uint idS) {
+                // get common sections
+                std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
+                // for each common section
+                for (auto &sectionID : commonSections) {
+                    // fetch the APRIL of R and S for this section
+                    spatial_lib::AprilDataT* aprilR = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->R, sectionID, idR);
+                    spatial_lib::AprilDataT* aprilS = spatial_lib::getAprilDataBySectionAndObjectIDs(g_query->S, sectionID, idS);
+
+                    // use APRIL intermediate filter
+                    int iFilterResult = coveredByAPRILUncompressed(aprilR, aprilS);
+                    if (iFilterResult != spatial_lib::INCONCLUSIVE) {
+                        // true negative or true hit, return
+                        // measure time
+                        spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+                        // count result
+                        spatial_lib::countAPRILResult(iFilterResult);
+                        return;
+                    }
+                }
+                // i filter ended, measure time
+                spatial_lib::g_queryOutput.iFilterTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.iFilterTimer);
+            
+                // count result
+                spatial_lib::countAPRILResult(spatial_lib::INCONCLUSIVE);
+
+                // refinement
+                spatial_lib::time::markRefinementFilterTimer();
+                spatial_lib::refineCoveredByJoin(idR, idS);
+                spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
+            }
+        }
+
+        namespace find_relation
+        {
             static void specializedTopologyRinSContainment(uint idR, uint idS) {
                 // get common sections
                 std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);
@@ -275,7 +524,6 @@ namespace APRIL
                 // }
             }
 
-
             static void APRILFindRelation(uint idR, uint idS, int relationCase) {
                 // use appropriate query function
                 switch (relationCase) {
@@ -297,59 +545,49 @@ namespace APRIL
                         break;
                 }
             }
+        }
 
-            void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase) {
-                // time 
-                spatial_lib::time::markiFilterTimer();
-                // count post mbr candidate
-                spatial_lib::g_queryOutput.postMBRFilterCandidates += 1;
 
-                    switch (g_query->type) {
-                        case spatial_lib::Q_INTERSECT:
-                        
+        void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase) {
+            // time 
+            spatial_lib::time::markiFilterTimer();
+            // count post mbr candidate
+            spatial_lib::g_queryOutput.postMBRFilterCandidates += 1;
+
+                switch (g_query->type) {
+                    case spatial_lib::Q_INTERSECT:
+                        relate::APRILIntersectionFilter(idR, idS);
                         break;
                     case spatial_lib::Q_INSIDE:
-                    
+                        relate::APRILInsideFilter(idR, idS);
                         break;
                     case spatial_lib::Q_DISJOINT:
-                    
+                        relate::APRILDisjointFilter(idR, idS);
                         break;
                     case spatial_lib::Q_EQUAL:
-                    
+                        relate::APRILEqualFilter(idR, idS);
                         break;
                     case spatial_lib::Q_MEET:
-                    
+                        relate::APRILMeetFilter(idR, idS);
                         break;
                     case spatial_lib::Q_CONTAINS:
-                    
+                        relate::APRILContainsFilter(idR, idS);
                         break;
                     case spatial_lib::Q_COVERS:
-                    
+                        relate::APRILCoversFilter(idR, idS);
                         break;
                     case spatial_lib::Q_COVERED_BY:   
-                    
+                        relate::APRILCoveredByFilter(idR, idS);
                         break;
                     case spatial_lib::Q_FIND_RELATION:
-                        APRILFindRelation(idR, idS, relationCase);
+                        find_relation::APRILFindRelation(idR, idS, relationCase);
                         break;
                     default:
                         fprintf(stderr, "Invalid query and APRIL filter combination.\n");
                         exit(-1);
                         break;
-                }
-            }   
-        }
-
-        
-
-            
-        namespace standard
-        {
-            
-        }
-
-
-        
+            }
+        }   
     }
 
 
@@ -360,11 +598,11 @@ namespace APRIL
     {
         namespace relate
         {
-            /************************************************/
             /**
-             * RELATE QUERY with specific relation
+             * WARNING: standard and optimized relate functions are THE SAME right now, but I keep separated because future optimization might happen.
+             * 
             */
-            /************************************************/
+
             static void APRILIntersectionFilter(uint idR, uint idS) {
                 // get common sections
                 std::vector<uint> commonSections = spatial_lib::getCommonSectionIDsOfObjects(g_query->R, g_query->S, idR, idS);

@@ -168,12 +168,11 @@ namespace APRIL
         if(!joinIntervalsForMatch(aprilR->intervalsALL, aprilR->numIntervalsALL, aprilS->intervalsALL, aprilS->numIntervalsALL)) {
             return spatial_lib::TRUE_NEGATIVE;
         }
-        if(aprilR->numIntervalsFULL && aprilS->numIntervalsFULL) {
-            // if their FULL intervals dont match, its TRUE NEGATIVE for equal
-            if (!joinIntervalsForMatch(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsFULL, aprilS->numIntervalsFULL)) {
-                return spatial_lib::TRUE_NEGATIVE;
-            }
-        } 
+        
+        // if their FULL intervals dont match, its TRUE NEGATIVE for equal
+        if (!joinIntervalsForMatch(aprilR->intervalsFULL, aprilR->numIntervalsFULL, aprilS->intervalsFULL, aprilS->numIntervalsFULL)) {
+            return spatial_lib::TRUE_NEGATIVE;
+        }
         // equal candidate, refinement
         return spatial_lib::INCONCLUSIVE;
     }
