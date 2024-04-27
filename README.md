@@ -3,15 +3,15 @@
 ## Features
 - Queries:
 - - Spatial Join with predicate, available predicates:
-- - intersect
-- - disjoint
-- - inside
-- - contains
-- - covered by
-- - covers
-- - meet
-- - equal
-- - find relation
+- - - intersect
+- - - disjoint
+- - - inside
+- - - contains
+- - - covered by
+- - - covers
+- - - meet
+- - - equal
+- - - find relation
 - Rasterizer:
 - - Full support to create APRIL and store on disk
 - MBR Filter:
