@@ -187,6 +187,7 @@ static void parsePipelineSettings(pipelineStatementT &pipelineStmt){
     bool res = verifyPipelineSettingsAndBuild(pipelineStmt);
     if(!res) {
         log_err("Failed when parsing pipeline settings.");
+        exit(-1);
     }
 }
 

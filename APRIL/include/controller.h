@@ -19,29 +19,6 @@ namespace APRIL
     */
     void setupAPRILIntermediateFilter(spatial_lib::QueryT *query);
     
-    namespace relate
-    {
-        namespace standard
-        {
-            /**
-             * Entrypoint function for the standard APRIL relate intermediate filter.
-             * standard MBR intersection filter forwards to this function.
-             * 
-            */
-            void IntermediateFilterEntrypoint(uint idR, uint idS);
-        }
-
-        namespace optimized
-        {
-            /**
-             * Entrypoint function for the optimized APRIL relate intermediate filter.
-             * optimized MBR filter forwards to this function
-             * 
-            */
-            void IntermediateFilterEntrypoint(uint idR, uint idS);
-        }
-    }
-
     namespace find_relation
     {
 
@@ -57,44 +34,53 @@ namespace APRIL
             void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase);
         }
 
-        namespace standard 
-        {
-            /**
-             * @brief Standard APRIL intermediate filter that detects disjoint and intersection pairs,
-             * but used for find relation queries. Non-disjoint pairs are refined using DE-9IM
-             * 
-             * 
-             * @param idR 
-             * @param idS 
-             */
-            void StandardIntermediateFilterEntrypoint(uint idR, uint idS);
-        }
-
-        namespace on_the_fly
-        {
-            /**
-             * @brief Intermediate filter called after the specialized find relation MBR Filter.
-             * Does not require APRIL pre-processing. Creates APRIL ON THE FLY!!!
-             * 
-             * @param idR 
-             * @param idS 
-             * @param relationCase 
-             */
-            void IntermediateFilterEntrypointOTF(uint idR, uint idS, int relationCase);
-        }
-
-        namespace scalability_test
-        {
-            /**
-             * @brief Entrypoint function for the find relation intermediate filter
-             * 
-             * @param idR 
-             * @param idS 
-             * @param relationCase 
-             */
-            void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase);
-        }
         
+
+        
+    }
+
+    namespace on_the_fly
+    {
+        /**
+         * @brief Intermediate filter called after the specialized find relation MBR Filter.
+         * Does not require APRIL pre-processing. Creates APRIL ON THE FLY!!!
+         * 
+         * @param idR 
+         * @param idS 
+         * @param relationCase 
+         */
+        void IntermediateFilterEntrypointOTF(uint idR, uint idS, int relationCase);
+    }
+    
+    namespace scalability_test
+    {
+        /**
+         * @brief Entrypoint function for the find relation intermediate filter
+         * 
+         * @param idR 
+         * @param idS 
+         * @param relationCase 
+         */
+        void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase);
+    }
+    
+
+    namespace standard
+    {
+        /**
+         * @brief Standard APRIL intermediate filter that detects disjoint and intersection pairs,
+         * but used for find relation queries. Non-disjoint pairs are refined using DE-9IM
+         * 
+         * 
+         * @param idR 
+         * @param idS 
+         */
+        void IntermediateFilterEntrypoint(uint idR, uint idS);
+    }
+
+    namespace _optimized
+    {
+
     }
 
 

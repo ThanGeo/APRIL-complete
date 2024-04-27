@@ -156,7 +156,7 @@ namespace two_layer
     unsigned long long evaluateTwoLayer() {
         switch (g_mbrFilterType) {
             case spatial_lib::MF_STANDARD:
-                return intersection::ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
+                return standard::ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
             case spatial_lib::MF_OPTIMIZED:
                 return optimized::FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
             case spatial_lib::MF_SCALABILITY:

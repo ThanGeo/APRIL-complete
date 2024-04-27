@@ -12,22 +12,21 @@ namespace two_layer
         return numer%denom;
     };
 
-    namespace intersection
+    namespace standard
     {
 
         inline void forwardPair(uint idR, uint idS) {
             switch (g_iFilterType) {
                 case spatial_lib::IF_APRIL_STANDARD:
-                    APRIL::find_relation::standard::StandardIntermediateFilterEntrypoint(idR,idS);
-                    break;
-                case spatial_lib::IF_APRIL_OPTIMIZED:
-                    APRIL::relate::standard::IntermediateFilterEntrypoint(idR, idS);
+                    APRIL::standard::IntermediateFilterEntrypoint(idR,idS);
                     break;
                 case spatial_lib::IF_NONE:
                     // straight to refinement
                     spatial_lib::refinementEntrypoint(idR, idS);
                     break;
                 default:
+                    fprintf(stderr, "ERROR: invalid combination of filters.\n");
+                    exit(-1);
                     break;
             }
         }
@@ -378,20 +377,10 @@ namespace two_layer
                 case spatial_lib::IF_APRIL_OTF:
                     if (relationCase != spatial_lib::MBR_CROSS) {
                         // forward to intermediate filter
-                        APRIL::find_relation::on_the_fly::IntermediateFilterEntrypointOTF(idR, idS, relationCase);
+                        APRIL::on_the_fly::IntermediateFilterEntrypointOTF(idR, idS, relationCase);
                     } else {
                         // they cross, true hit intersect (skip intermediate filter)
                         spatial_lib::countTopologyRelationResult(spatial_lib::TR_INTERSECT);
-                    }
-                    break;
-                case spatial_lib::IF_APRIL_SCALABILITY:
-                    if (relationCase != spatial_lib::MBR_CROSS) {
-                        // forward to intermediate filter
-                        APRIL::find_relation::scalability_test::IntermediateFilterEntrypoint(idR, idS, relationCase);
-                    } else {
-                        // they cross, true hit intersect (skip intermediate filter)
-                        spatial_lib::countTopologyRelationResult(spatial_lib::TR_INTERSECT);
-                        // printf("%u,%u\n", idR, idS);
                     }
                     break;
                 case spatial_lib::IF_NONE:
@@ -831,19 +820,10 @@ namespace two_layer
                         // printf("%u,%u\n", idR, idS);
                     }
                     break;
-                case spatial_lib::IF_APRIL_OTF:
-                    if (relationCase != spatial_lib::MBR_CROSS) {
-                        // forward to intermediate filter
-                        APRIL::find_relation::on_the_fly::IntermediateFilterEntrypointOTF(idR, idS, relationCase);
-                    } else {
-                        // they cross, true hit intersect (skip intermediate filter)
-                        spatial_lib::countTopologyRelationResult(spatial_lib::TR_INTERSECT);
-                    }
-                    break;
                 case spatial_lib::IF_APRIL_SCALABILITY:
                     if (relationCase != spatial_lib::MBR_CROSS) {
                         // forward to intermediate filter
-                        APRIL::find_relation::scalability_test::IntermediateFilterEntrypoint(idR, idS, relationCase);
+                        APRIL::scalability_test::IntermediateFilterEntrypoint(idR, idS, relationCase);
                     } else {
                         // they cross, true hit intersect (skip intermediate filter)
                         spatial_lib::countTopologyRelationResult(spatial_lib::TR_INTERSECT);

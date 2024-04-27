@@ -108,6 +108,11 @@ static bool verifyQuery(QueryStatementT *queryStmt) {
         return false;
     }
     
+    // verify OTF setting
+    if (g_config.pipeline.setting == spatial_lib::P_OTF && itqt->second != spatial_lib::Q_FIND_RELATION) {
+        log_err("On-the-fly rasterization during query evaluation has only been implemented for 'find relation' queries.");
+        return false;
+    }
 
     return true;
 }

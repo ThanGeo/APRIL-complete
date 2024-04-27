@@ -7,7 +7,7 @@
 
 namespace two_layer
 {
-    namespace intersection
+    namespace standard
     {
         /**
          * @brief Performs the Two Layer standard spatial intersection join MBR evaluation filter
