@@ -20,7 +20,7 @@ namespace two_layer
                 case spatial_lib::IF_APRIL_STANDARD:
                     APRIL::find_relation::standard::StandardIntermediateFilterEntrypoint(idR,idS);
                     break;
-                case spatial_lib::IF_APRIL_FR:
+                case spatial_lib::IF_APRIL_OPTIMIZED:
                     APRIL::relate::standard::IntermediateFilterEntrypoint(idR, idS);
                     break;
                 case spatial_lib::IF_NONE:
@@ -365,7 +365,7 @@ namespace two_layer
         static inline void forwardPair(uint idR, uint idS, spatial_lib::MBRRelationCaseE relationCase) {
             
             switch (g_iFilterType) {
-                case spatial_lib::IF_APRIL_FR:
+                case spatial_lib::IF_APRIL_OPTIMIZED:
                     if (relationCase != spatial_lib::MBR_CROSS) {
                         // forward to intermediate filter
                         APRIL::find_relation::optimized::IntermediateFilterEntrypoint(idR, idS, relationCase);
@@ -821,7 +821,7 @@ namespace two_layer
         static inline void forwardPair(uint idR, uint idS, spatial_lib::MBRRelationCaseE relationCase) {
             
             switch (g_iFilterType) {
-                case spatial_lib::IF_APRIL_FR:
+                case spatial_lib::IF_APRIL_OPTIMIZED:
                     if (relationCase != spatial_lib::MBR_CROSS) {
                         // forward to intermediate filter
                         APRIL::find_relation::optimized::IntermediateFilterEntrypoint(idR, idS, relationCase);

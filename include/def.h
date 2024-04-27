@@ -20,6 +20,7 @@ typedef struct DirectoryPath {
 } DirectoryPathT;
 
 typedef struct Pipeline{
+    spatial_lib::PipelineSettingE setting;
     spatial_lib::MBRFilterTypeE MBRFilterType;
     spatial_lib::IntermediateFilterTypeE iFilterType;
     bool RefinementEnabled;

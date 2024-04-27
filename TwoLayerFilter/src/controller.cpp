@@ -155,11 +155,11 @@ namespace two_layer
 
     unsigned long long evaluateTwoLayer() {
         switch (g_mbrFilterType) {
-            case spatial_lib::MBR_FT_INTERSECTION_SIMPLE:
+            case spatial_lib::MF_STANDARD:
                 return intersection::ForwardScanBased_PlaneSweep_CNT_Y_Less(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
-            case spatial_lib::MBR_FT_FIND_RELATION:
+            case spatial_lib::MF_OPTIMIZED:
                 return optimized::FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
-            case spatial_lib::MBR_FT_FR_SCALABILITY:
+            case spatial_lib::MF_SCALABILITY:
                 return optimized_scalability::FindRelationMBRFilter(pR, pS, pRA_size, pSA_size, pRB_size, pSB_size, pRC_size, pSC_size, pRD_size, pSD_size, runNumPartitions);
             default:
                 printf("Two-layer filter error: unkown MBR filter type\n");

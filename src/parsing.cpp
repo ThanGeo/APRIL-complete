@@ -167,7 +167,7 @@ static void parseAPRILoptions(iFilterStatementT *iFilterStmt) {
 
 static void parseIntermediateFilterOptions(iFilterStatementT *iFilterStmt) {
     switch (g_config.pipeline.iFilterType) {
-        case spatial_lib::IF_APRIL_FR:
+        case spatial_lib::IF_APRIL_OPTIMIZED:
         case spatial_lib::IF_APRIL_STANDARD:
         case spatial_lib::IF_APRIL_OTF:
         case spatial_lib::IF_APRIL_SCALABILITY:
@@ -178,22 +178,15 @@ static void parseIntermediateFilterOptions(iFilterStatementT *iFilterStmt) {
     }
 }
 
-static void parsePipelineOptions(std::string &mbrFilterTypeStr, std::string &iFilterTypeStr) {
+static void parsePipelineSettings(pipelineStatementT &pipelineStmt){
+    if (pipelineStmt.settingStr == "") {
+        // if no argument has been given for the pipeline setting, read from the config file
+        pipelineStmt.settingStr = system_config_pt.get<std::string>("Pipeline.setting");
+    }
     // verify and build pipeline
-    // parse mbr filter type
-    if (mbrFilterTypeStr == "") {
-        // if argument didnt specify, read from config file
-        mbrFilterTypeStr = system_config_pt.get<std::string>("Pipeline.mbrFilter");
-    }
-    // parse intermediate filter type
-    if (iFilterTypeStr == "") {
-        // if argument didnt specify, read from config file
-        iFilterTypeStr = system_config_pt.get<std::string>("Pipeline.IntermediateFilterType");
-    }
-
-    if (!verifyAndBuildPipeline(mbrFilterTypeStr, iFilterTypeStr, system_config_pt.get<int>("Pipeline.refinement"))) {
-        log_err("Failed while verifying and building pipeline config");
-        exit(-1);
+    bool res = verifyPipelineSettingsAndBuild(pipelineStmt);
+    if(!res) {
+        log_err("Failed when parsing pipeline settings.");
     }
 }
 
@@ -201,7 +194,8 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     char c;
     QueryStatementT queryStmt;
     iFilterStatementT iFilterStmt;
-    mbrFilterStatementT mbrFilterStmt;
+    pipelineStatementT pipelineStmt;
+    pipelineStmt.settingStr = "";
     // check If config file does exist
     if (!verifyFileExists(g_config.dirPaths.configFilePath)) {
         log_err("Configuration file 'config.ini' missing from Database directory. Please refer to the README file.");
@@ -209,7 +203,7 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     }
 
     // read arguments
-    while ((c = getopt(argc, argv, "m:p:cf:q:R:S:ev:?")) != -1)
+    while ((c = getopt(argc, argv, "s:m:p:cf:q:R:S:ev:?")) != -1)
     {
         switch (c)
         {
@@ -219,10 +213,6 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
             case 'q':
                 // Query Type
                 queryStmt.queryType = std::string(optarg);
-                break;   
-            case 'f':
-                // Intermediate Filter Type
-                iFilterStmt.iFiltertypeStr = std::string(optarg);
                 break;
             case 'R':
                 // Dataset R path
@@ -237,16 +227,15 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
             case 'p':
                 iFilterStmt.partitions = atoi(optarg);
                 break;
-            case 'm':
-                mbrFilterStmt.mbrFilterTypeStr = std::string(optarg);
-                mbrFilterStmt.enabled = true;
-                break;
             case 'e':
                 g_config.actions.runExperiments = true;
                 break;
             case 'v':
                 g_config.actions.exportCSV = true;
                 g_config.actions.csvFilepath = std::string(optarg);
+                break;
+            case 's':
+                pipelineStmt.settingStr = std::string(optarg);
                 break;
             default:
                 exit(-1);
@@ -258,7 +247,7 @@ void parseArgumentsAndConfigurationFile(int argc, char *argv[]) {
     boost::property_tree::ini_parser::read_ini(g_config.dirPaths.datasetsConfigPath, dataset_config_pt);
 
     // parse pipeline options FIRST
-    parsePipelineOptions(mbrFilterStmt.mbrFilterTypeStr, iFilterStmt.iFiltertypeStr);
+    parsePipelineSettings(pipelineStmt);
 
     // parse dataset options
     parseDatasetOptions(&queryStmt);

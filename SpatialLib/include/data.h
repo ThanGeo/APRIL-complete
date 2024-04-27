@@ -109,17 +109,26 @@ namespace spatial_lib
         IF_NONE,
         IF_MARK_APRIL_BEGIN,
         IF_APRIL_STANDARD = IF_MARK_APRIL_BEGIN,
-        IF_APRIL_FR,
+        IF_APRIL_OPTIMIZED,
         IF_APRIL_OTF,
         IF_APRIL_SCALABILITY,
         IF_MARK_APRIL_END
     } IntermediateFilterTypeE;
 
     typedef enum MBRFilterType {
-        MBR_FT_INTERSECTION_SIMPLE,
-        MBR_FT_FIND_RELATION,
-        MBR_FT_FR_SCALABILITY,
+        MF_STANDARD,
+        MF_OPTIMIZED,
+        MF_SCALABILITY,
     } MBRFilterTypeE;
+
+    typedef enum PipelineSetting {
+        P_ST2,
+        P_ST3,
+        P_OP2,
+        P_OP3,
+        P_SCALABILITY,
+        P_OTF,
+    } PipelineSettingE;
 
     // APRIL data
     typedef struct AprilData {

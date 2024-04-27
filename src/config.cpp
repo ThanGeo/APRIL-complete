@@ -18,29 +18,20 @@ static std::unordered_map<std::string, spatial_lib::QueryTypeE> queryStringToInt
     {"find_relation",spatial_lib::Q_FIND_RELATION},
     };
 
-static std::unordered_map<std::string, spatial_lib::IntermediateFilterTypeE> intermediateFilterStringToIntMap = {
-    {"APRIL_STANDARD",spatial_lib::IF_APRIL_STANDARD},
-    {"APRIL_FR",spatial_lib::IF_APRIL_FR},
-    {"APRIL_OTF",spatial_lib::IF_APRIL_OTF},
-    {"APRIL_FR_SCALABILITY",spatial_lib::IF_APRIL_SCALABILITY},
-
-    // {"RI",spatial_lib::AT_RI},
-    // {"5CCA",spatial_lib::AT_5CCH},
-    // {"GEOS",spatial_lib::AT_GEOS},
-    // {"RA",spatial_lib::AT_RA}
-    };
-
-static std::unordered_map<std::string, int> mbrFilterStringToIntMap = {
-    {"MBR_STANDARD",spatial_lib::MBR_FT_INTERSECTION_SIMPLE},
-    {"MBR_FR",spatial_lib::MBR_FT_FIND_RELATION},
-    {"MBR_FR_SCALABILITY",spatial_lib::MBR_FT_FR_SCALABILITY},
-    };
+static std::unordered_map<std::string, spatial_lib::PipelineSettingE> pipelineSettingsStringToIntMap = {
+    {"ST2", spatial_lib::P_ST2},
+    {"ST3", spatial_lib::P_ST3},
+    {"OP2", spatial_lib::P_OP2},
+    {"OP3", spatial_lib::P_OP3},
+    {"SCALABILITY", spatial_lib::P_SCALABILITY},
+    {"OTF", spatial_lib::P_OTF},
+};
 
 static std::string iFilterTypeIntToText(int val){
     switch(val) {
         case spatial_lib::IF_NONE: return "NONE";
         case spatial_lib::IF_APRIL_STANDARD: return "APRIL STANDARD";
-        case spatial_lib::IF_APRIL_FR: return "APRIL FIND RELATION";
+        case spatial_lib::IF_APRIL_OPTIMIZED: return "APRIL FIND RELATION";
         case spatial_lib::IF_APRIL_OTF: return "APRIL ON THE FLY";
         case spatial_lib::IF_APRIL_SCALABILITY: return "APRIL FIND RELATION SCALABILITY TEST";
     }
@@ -48,9 +39,9 @@ static std::string iFilterTypeIntToText(int val){
 
 static std::string mbrFilterTypeIntToText(int val){
     switch(val) {
-        case spatial_lib::MBR_FT_INTERSECTION_SIMPLE: return "STANDARD MBR FILTER";
-        case spatial_lib::MBR_FT_FIND_RELATION: return "FIND RELATION MBR FILTER";
-        case spatial_lib::MBR_FT_FR_SCALABILITY: return "FIND RELATION SCALABILITY MBR FILTER";
+        case spatial_lib::MF_STANDARD: return "STANDARD MBR FILTER";
+        case spatial_lib::MF_OPTIMIZED: return "FIND RELATION MBR FILTER";
+        case spatial_lib::MF_SCALABILITY: return "FIND RELATION SCALABILITY MBR FILTER";
     }
 }
 
@@ -108,19 +99,14 @@ static bool verifyQuery(QueryStatementT *queryStmt) {
         return false;
     }
 
-    // verify combination of query + MBR filter
-    if ((itqt->second != spatial_lib::Q_FIND_RELATION) && (g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FIND_RELATION || g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FR_SCALABILITY)) {
-        // not allowed to use specialized MBR filter for non find relation queries
-        log_err_w_text("'Find relation' MBR filter allowed only for 'find relation' queries. Not", queryStmt->queryType);
+    // check if its a scalability experiment and verify
+    if (g_config.pipeline.setting == spatial_lib::P_SCALABILITY && 
+        (itqt->second != spatial_lib::Q_FIND_RELATION || 
+        queryStmt->datasetNicknameR != "O5EU" || queryStmt->datasetNicknameS != "O6EU")) {
+
+        log_err("Scalability pipeline is available only for find relation queries and datasets O5EU,O6EU");
         return false;
     }
-    // verify combination of query + Intermediate filter
-    // if ((itqt->second != spatial_lib::Q_FIND_RELATION) && (g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_FR 
-    // || g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_OTF || g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_SCALABILITY)) {
-    //     // not allowed to use specialized MBR filter for non find relation queries
-    //     log_err_w_text("'Find relation/OTF' APRIL filter allowed only for 'find relation' queries. Not", queryStmt->queryType);
-    //     return false;
-    // }
     
 
     return true;
@@ -194,52 +180,54 @@ bool verifyAndbuildQuery(QueryStatementT *queryStmt) {
     return true;
 }
 
-static bool verifyPipeline(std::string mbrFilterType, std::string intermediateFilterType) {
-    auto it = mbrFilterStringToIntMap.find(mbrFilterType);
-    if (it == mbrFilterStringToIntMap.end()) {
-        log_err_w_text("Invalid selection of MBR filter type.", mbrFilterType);
+
+bool verifyPipelineSettingsAndBuild(pipelineStatementT &pipelineStmt) {
+    // verify setting
+    auto it = pipelineSettingsStringToIntMap.find(pipelineStmt.settingStr);
+    if (it == pipelineSettingsStringToIntMap.end()) {
+        log_err_w_text("Invalid pipeline settings", pipelineStmt.settingStr);
         // todo: print availables
         return false;
     }
-    if (intermediateFilterType != "") {
-        auto it = intermediateFilterStringToIntMap.find(intermediateFilterType);
-        if (it == intermediateFilterStringToIntMap.end()) {
-            log_err_w_text("Invalid selection of intermediate filter type.", intermediateFilterType);
-            // todo: print availables
-            return false;
-        }
+    // add setting
+    g_config.pipeline.setting = it->second;
+    // based on setting, add the corresponding pipeline parts
+    switch(g_config.pipeline.setting) {
+        case spatial_lib::P_ST2:
+            g_config.pipeline.MBRFilterType = spatial_lib::MF_STANDARD;
+            g_config.pipeline.iFilterType = spatial_lib::IF_NONE;
+            g_config.pipeline.RefinementEnabled = true;
+            break;
+        case spatial_lib::P_ST3:
+            g_config.pipeline.MBRFilterType = spatial_lib::MF_STANDARD;
+            g_config.pipeline.iFilterType = spatial_lib::IF_APRIL_STANDARD;
+            g_config.pipeline.RefinementEnabled = true;
+            break;
+        case spatial_lib::P_OP2:
+            g_config.pipeline.MBRFilterType = spatial_lib::MF_OPTIMIZED;
+            g_config.pipeline.iFilterType = spatial_lib::IF_NONE;
+            g_config.pipeline.RefinementEnabled = true;
+            break;
+        case spatial_lib::P_OP3:
+            g_config.pipeline.MBRFilterType = spatial_lib::MF_OPTIMIZED;
+            g_config.pipeline.iFilterType = spatial_lib::IF_APRIL_OPTIMIZED;
+            g_config.pipeline.RefinementEnabled = true;
+            break;
+        case spatial_lib::P_SCALABILITY:
+            g_config.pipeline.MBRFilterType = spatial_lib::MF_SCALABILITY;
+            g_config.pipeline.iFilterType = spatial_lib::IF_APRIL_SCALABILITY;
+            g_config.pipeline.RefinementEnabled = true;
+            break;
+        case spatial_lib::P_OTF:
+            g_config.pipeline.MBRFilterType = spatial_lib::MF_OPTIMIZED;
+            g_config.pipeline.iFilterType = spatial_lib::IF_APRIL_OTF;
+            g_config.pipeline.RefinementEnabled = true;
+            break;
     }
+
     return true;
 }
 
-bool verifyAndBuildPipeline(std::string mbrFilterType, std::string intermediateFilterType, int refinementEnabled){
-    // verify
-    if (!verifyPipeline(mbrFilterType, intermediateFilterType)) {
-        log_err("Failed when verifying pipeline config.");
-        return false;
-    }  
-    // mbr filter
-    if (mbrFilterType != "") {
-        auto it = mbrFilterStringToIntMap.find(mbrFilterType);
-        g_config.pipeline.MBRFilterType = (spatial_lib::MBRFilterTypeE) it->second;
-    } else {
-        // use default
-        g_config.pipeline.MBRFilterType = spatial_lib::MBR_FT_INTERSECTION_SIMPLE;
-    }
-    // intermediate filter
-    if (intermediateFilterType != "") {
-        // build
-        auto it = intermediateFilterStringToIntMap.find(intermediateFilterType);
-        g_config.pipeline.iFilterType = it->second;
-    } else {
-        // no filter
-        g_config.pipeline.iFilterType = spatial_lib::IF_NONE;
-    }
-    // refinement    
-    g_config.pipeline.RefinementEnabled = refinementEnabled;
-
-    return true;
-}
 
 /**
  * creates APRIL for a dataset using the rasterizer lib
@@ -595,14 +583,14 @@ void initConfig() {
             g_config.queryData.boundsSet = true;
             success_text("Calculated global bounds based on dataset bounds.");
         }
-        case spatial_lib::MBR_FT_INTERSECTION_SIMPLE:
-            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_INTERSECTION_SIMPLE, g_config.queryData.type);
+        case spatial_lib::MF_STANDARD:
+            two_layer::initTwoLayer(1000, spatial_lib::MF_STANDARD, g_config.queryData.type);
             break;
-        case spatial_lib::MBR_FT_FIND_RELATION:
-            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_FIND_RELATION, g_config.queryData.type);
+        case spatial_lib::MF_OPTIMIZED:
+            two_layer::initTwoLayer(1000, spatial_lib::MF_OPTIMIZED, g_config.queryData.type);
             break;
-        case spatial_lib::MBR_FT_FR_SCALABILITY:
-            two_layer::initTwoLayer(1000, spatial_lib::MBR_FT_FR_SCALABILITY, g_config.queryData.type);
+        case spatial_lib::MF_SCALABILITY:
+            two_layer::initTwoLayer(1000, spatial_lib::MF_SCALABILITY, g_config.queryData.type);
             // init scalability stuff
             initScalabilityTesting();
             break;
@@ -614,11 +602,11 @@ void initConfig() {
 
     // initialize intermediate filter, if any
     switch (g_config.pipeline.iFilterType) {
-        case spatial_lib::IF_APRIL_FR:
+        case spatial_lib::IF_APRIL_OPTIMIZED:
             // init APRIL
             initAPRIL();
             // set as next stage after two-layer MBR filter
-            two_layer::setNextStage(spatial_lib::IF_APRIL_FR);
+            two_layer::setNextStage(spatial_lib::IF_APRIL_OPTIMIZED);
             break;
         case spatial_lib::IF_APRIL_STANDARD:
             // init APRIL

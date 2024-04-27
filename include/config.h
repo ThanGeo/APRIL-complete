@@ -51,11 +51,17 @@ typedef struct mbrFilterStatement
     std::string mbrFilterTypeStr = "";
 } mbrFilterStatementT;
 
+typedef struct pipelineStatement {
+    std::string settingStr;
+    mbrFilterStatementT mbrStmt;
+    iFilterStatementT iFilterStmt;
+} pipelineStatementT;
+
 void printConfig();
 std::string getConfigSettingsStr();
 
 bool verifyAndbuildQuery(QueryStatementT *queryStmt);
-bool verifyAndBuildPipeline(std::string mbrFilterType, std::string intermediateFilterType, int refinementEnabled);
+bool verifyPipelineSettingsAndBuild(pipelineStatementT &pipelineStmt);
 bool verifyDirectoryExists(std::string &directoryPath);
 
 /**

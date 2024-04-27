@@ -98,7 +98,7 @@ static void printResults(int runTimes) {
 
             break;
     }
-    if (g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_SCALABILITY || g_config.pipeline.MBRFilterType == spatial_lib::MBR_FT_FR_SCALABILITY) {
+    if (g_config.pipeline.iFilterType == spatial_lib::IF_APRIL_SCALABILITY || g_config.pipeline.MBRFilterType == spatial_lib::MF_SCALABILITY) {
         for(int i=0; i<spatial_lib::g_scalContainer.numberOfBuckets; i++) {
             printf("Bucket %d:\n",i);
             printf("\tInconclusive pairs: %u\n", spatial_lib::g_scalContainer.bucketInconclusiveCount[i]);

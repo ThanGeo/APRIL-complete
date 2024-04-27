@@ -42,14 +42,7 @@ Inside build/ directory, the executable 'main' is program executable.
 - - meet : r and s meet (touch)
 - - equal : r and s are geometrically equal
 - - find_relation : detect all relations between r and s
-- -m "keyword" : sets the "keyword" filter as the MBR filter, options:
-- - MBR_STANDARD : standard MBR intersection filter (default)
-- - MBR_FR : specialized MBR filter for find relation queries
-- -f "keyword" : sets the "keyword" filter as the intermediate filter, options:
-- - "" : no intermediate filter (default)
-- - APRIL_STANDARD : standard APRIL intersection intermediate filter
-- - APRIL_FR : specialized APRIL intermediate filter for find relation queries
-- - APRIL_OTF : specialized APRIL intermediate filter for **find relation queries** that performs rasterization on the fly (no pre-processing)
+- -s "setting" : sets the pipeline setting. Options include (ST2, ST3, OP2, OP3 and some development ones. For more, see topology relations paper.)
 - -p "num" : sets "num" partitions for the APRIL approximation
 - -e : evaluates the query 10 times and prints the average times
 - -v "file" : export CSV with the results to "file". If file exists, then append the output
@@ -61,10 +54,11 @@ Includes the system parameters
 ### datasets.ini
 Includes the datasets parameters. 
 To run on new datasets, first an entry must be added to the datasets.ini configuration file.
-Use a unique keyword for the section of the dataset's parameters.
+Use a unique keyword for the section of the dataset's parameters. 
+If using APRIL, make sure to specify '-c' in the first run to create APRIL for the dataset.
 
-Then, input the new dataset in main in the following way:
+Example run:
 ```
-./main -q <query_type> -f APRIL -R <my R dataset keyword> -S <my S dataset keyword>
+./main -q <query_type> -s OP3 -R <my R dataset keyword> -S <my S dataset keyword>
 ```
-Datasets must have an offset map specified for faster refinement (TODO: add generation of offset map)
+WARNING: Datasets must have an offset map specified for faster refinement (TODO: add generation of offset map, currently unsupported)
