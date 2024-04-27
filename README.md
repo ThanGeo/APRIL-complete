@@ -2,25 +2,25 @@
 
 ## Features
 - Queries:
-- - Spatial Join with predicate, available predicates:
-- - - intersect
-- - - disjoint
-- - - inside
-- - - contains
-- - - covered by
-- - - covers
-- - - meet
-- - - equal
-- - - find relation
+    - Spatial Join with predicate, available predicates:
+        - intersect
+        - disjoint
+        - inside
+        - contains
+        - covered by
+        - covers
+        - meet
+        - equal
+        - find relation
 - Rasterizer:
-- - Full support to create APRIL and store on disk
+    - Full support to create APRIL and store on disk
 - MBR Filter:
-- - Two-Layer filter (D. Tsitsigkos et al.). APRIL filter is always after the MBR Filter in the pipeline
-- - Optimized Two-Layer filter for "find relation" and "relate with predicate" queries
+    - Two-Layer filter (D. Tsitsigkos et al.). APRIL filter is always after the MBR Filter in the pipeline
+    - Optimized Two-Layer filter for "find relation" and "relate with predicate" queries
 - APRIL Features
-- - Partitioning mechanism [1,32] for better performance
-- - SOON: compression
-- - SOON: different granularity support
+    - Partitioning mechanism [1,32] for better performance
+    - SOON: compression
+    - SOON: different granularity support
 
 
 ## Build
