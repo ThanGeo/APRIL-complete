@@ -139,6 +139,12 @@ namespace APRIL
             //add intervals to the april data reference
             aprilData->intervalsFULL.insert(aprilData->intervalsFULL.begin(), &loadSpace32[0], loadSpace32 + loadIndex);
 
+
+            // if (recID == 206434) {
+            //     printAPRIL(*aprilData);
+            //     printf("^Dataset: %s polygon %u\n", dataset.nickname.c_str(), recID);
+            // }
+
             polCounter++;
         }
         // terminate this file

@@ -274,6 +274,8 @@ namespace APRIL
             }
         }
 
+
+        clock_t temp_timer;
         namespace find_relation
         {
             static void specializedTopologyRinSContainment(uint idR, uint idS) {
@@ -298,7 +300,17 @@ namespace APRIL
                             spatial_lib::countTopologyRelationResult(iFilterResult);
 
                             // if(iFilterResult == spatial_lib::TR_INTERSECT){
-                            //     printf("%u,%u\n", idR, idS);
+                            //     // printf("%u,%u\n", idR, idS);
+                            //     std::pair<uint,uint> vertexCounts = spatial_lib::getVertexCountsOfPair(idR,idS);
+                            //     if(vertexCounts.first > 2000 && vertexCounts.second > 2000) {
+                            //         printf("polygons %u,%u vertex counts %u,%u\n", idR, idS, vertexCounts.first, vertexCounts.second);
+                            //     }
+                            // }
+
+                            // if (idR == 220594 && idS == 357429) {
+                            // if (idR == 206434 && idS == 9173759) {
+                            //     printf("Time passed evaluating pair %u,%u: %f seconds\n", idR, idS, spatial_lib::time::getElapsedTime(temp_timer));
+                            //     printf("A/F intervals: %u/%u and %u/%u\n", aprilR->numIntervalsALL, aprilR->numIntervalsFULL, aprilS->numIntervalsALL, aprilS->numIntervalsFULL);
                             // }
 
                             // time
@@ -547,45 +559,49 @@ namespace APRIL
             }
         }
 
-
         void IntermediateFilterEntrypoint(uint idR, uint idS, int relationCase) {
             // time 
             spatial_lib::time::markiFilterTimer();
             // count post mbr candidate
             spatial_lib::g_queryOutput.postMBRFilterCandidates += 1;
+            
+            // if (idR == 220594 && idS == 357429) {
+            // if (idR == 206434 && idS == 9173759) {
+            //     temp_timer = spatial_lib::time::getNewTimer();
+            // }
 
-                switch (g_query->type) {
-                    case spatial_lib::Q_INTERSECT:
-                        relate::APRILIntersectionFilter(idR, idS);
-                        break;
-                    case spatial_lib::Q_INSIDE:
-                        relate::APRILInsideFilter(idR, idS);
-                        break;
-                    case spatial_lib::Q_DISJOINT:
-                        relate::APRILDisjointFilter(idR, idS);
-                        break;
-                    case spatial_lib::Q_EQUAL:
-                        relate::APRILEqualFilter(idR, idS);
-                        break;
-                    case spatial_lib::Q_MEET:
-                        relate::APRILMeetFilter(idR, idS);
-                        break;
-                    case spatial_lib::Q_CONTAINS:
-                        relate::APRILContainsFilter(idR, idS);
-                        break;
-                    case spatial_lib::Q_COVERS:
-                        relate::APRILCoversFilter(idR, idS);
-                        break;
-                    case spatial_lib::Q_COVERED_BY:   
-                        relate::APRILCoveredByFilter(idR, idS);
-                        break;
-                    case spatial_lib::Q_FIND_RELATION:
-                        find_relation::APRILFindRelation(idR, idS, relationCase);
-                        break;
-                    default:
-                        fprintf(stderr, "Invalid query and APRIL filter combination.\n");
-                        exit(-1);
-                        break;
+            switch (g_query->type) {
+                case spatial_lib::Q_INTERSECT:
+                    relate::APRILIntersectionFilter(idR, idS);
+                    break;
+                case spatial_lib::Q_INSIDE:
+                    relate::APRILInsideFilter(idR, idS);
+                    break;
+                case spatial_lib::Q_DISJOINT:
+                    relate::APRILDisjointFilter(idR, idS);
+                    break;
+                case spatial_lib::Q_EQUAL:
+                    relate::APRILEqualFilter(idR, idS);
+                    break;
+                case spatial_lib::Q_MEET:
+                    relate::APRILMeetFilter(idR, idS);
+                    break;
+                case spatial_lib::Q_CONTAINS:
+                    relate::APRILContainsFilter(idR, idS);
+                    break;
+                case spatial_lib::Q_COVERS:
+                    relate::APRILCoversFilter(idR, idS);
+                    break;
+                case spatial_lib::Q_COVERED_BY:   
+                    relate::APRILCoveredByFilter(idR, idS);
+                    break;
+                case spatial_lib::Q_FIND_RELATION:
+                    find_relation::APRILFindRelation(idR, idS, relationCase);
+                    break;
+                default:
+                    fprintf(stderr, "Invalid query and APRIL filter combination.\n");
+                    exit(-1);
+                    break;
             }
         }   
     }
@@ -596,6 +612,7 @@ namespace APRIL
 
     namespace standard
     {
+        clock_t temp_timer;
         namespace relate
         {
             /**
@@ -900,6 +917,12 @@ namespace APRIL
                 spatial_lib::time::markRefinementFilterTimer();
                 // refine
                 spatial_lib::refineAllRelations(idR, idS);
+
+                // if (idR == 220594 && idS == 357429) {
+                //     printf("Time passed evaluating pair %u,%u: %f seconds.\n", idR, idS, spatial_lib::time::getElapsedTime(temp_timer));
+                // }
+
+
                 // time
                 spatial_lib::g_queryOutput.refinementTime += spatial_lib::time::getElapsedTime(spatial_lib::time::g_timer.refTimer);
             }
@@ -909,6 +932,11 @@ namespace APRIL
         void IntermediateFilterEntrypoint(uint idR, uint idS) {
             // time 
             spatial_lib::time::markiFilterTimer();
+
+            // if (idR == 220594 && idS == 357429) {
+            //     temp_timer = spatial_lib::time::getNewTimer();
+            // }
+
             // count post mbr candidate
             spatial_lib::g_queryOutput.postMBRFilterCandidates += 1;
             // use appropriate query function

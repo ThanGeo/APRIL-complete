@@ -9,6 +9,15 @@ namespace spatial_lib
     extern QueryTypeE g_queryType;
 
     void setupRefinement(QueryT &query);
+    
+    /**
+     * utils
+    */
+
+    /**
+     * load the geometries and return a pair of their vertex counts.
+    */
+    std::pair<uint,uint> getVertexCountsOfPair(uint idR, uint idS);
 
     /**
      * Entrypoint function for when there is NO intermediate filter.

@@ -7,7 +7,7 @@
 namespace APRIL
 {
     
-    
+    void printAPRIL(spatial_lib::AprilDataT aprilData);
 }
 
 

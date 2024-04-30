@@ -67,6 +67,16 @@ namespace spatial_lib
     
     QueryTypeE g_queryType;
 
+    /**
+     * util
+    */
+    std::pair<uint,uint> getVertexCountsOfPair(uint idR, uint idS) {
+        bg_polygon boostPolygonR = loadPolygonFromDiskBoostGeometry(idR, finR, offsetMapR);
+        bg_polygon boostPolygonS = loadPolygonFromDiskBoostGeometry(idS, finS, offsetMapS);
+
+        return std::make_pair(boostPolygonR.outer().size(), boostPolygonS.outer().size());
+    }
+
 
     /**
      * Boost geometry refinement for specific relations

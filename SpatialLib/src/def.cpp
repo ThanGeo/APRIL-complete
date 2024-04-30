@@ -62,6 +62,9 @@ namespace spatial_lib
         while (!fin.eof()) {
             fin >> idR >> del >> idS >> del >> complexity >> del >> bucketID;
             g_scalContainer.pairToBucketIDMap.insert(std::make_pair(std::make_pair(idR,idS),bucketID));
+            // if (bucketID == 9) {
+            //     printf("%u,%u\n",idR,idS);
+            // }
         }
         fin.close();
     }

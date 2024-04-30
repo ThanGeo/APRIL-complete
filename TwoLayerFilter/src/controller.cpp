@@ -160,6 +160,8 @@ namespace two_layer
             case spatial_lib::MF_OPTIMIZED:
                 
                 switch (g_queryType) {
+                    // TODO: OPTIMIZE SO THAT SOME RELATIONS (LIKE INTERSECT) DONT HAVE TO GO THROUGH
+                    // THE "OPTIMIZED" MBR FILTER, SINCE SIMPLE INTERSECTION IS ENOUGH FOR THEM
                     case spatial_lib::Q_CONTAINS:
                     case spatial_lib::Q_COVERED_BY:
                     case spatial_lib::Q_COVERS:

@@ -45,6 +45,17 @@ static std::string mbrFilterTypeIntToText(int val){
     }
 }
 
+static std::string pipelineSettingIntToText(spatial_lib::PipelineSettingE val) {
+    switch(val) {
+        case spatial_lib::P_ST2: return "ST2";
+        case spatial_lib::P_OP2: return "OP2";
+        case spatial_lib::P_ST3: return "ST3";
+        case spatial_lib::P_OP3: return "OP3";
+        case spatial_lib::P_SCALABILITY: return "SCALABILITY";
+        case spatial_lib::P_OTF: return "OTF";
+    }
+}
+
 static std::string dataComboIntToText(int val){
     switch(val) {
         case spatial_lib::POLYGON_POLYGON: return "POLYGON_POLYGON";
@@ -71,9 +82,10 @@ void printConfig() {
 
 std::string getConfigSettingsStr() {
     std::string str = "";
-    str += "Query: " + queryTypeIntToText(g_config.queryData.type) + "\n";
-    str += "Datasets: " + g_config.queryData.R.nickname + "," + g_config.queryData.S.nickname + "\n";
-    str += "Pipeline: " + mbrFilterTypeIntToText(g_config.pipeline.MBRFilterType) + "->" + iFilterTypeIntToText(g_config.pipeline.iFilterType) + "->Refinement\n";
+    str += "Query: " + queryTypeIntToText(g_config.queryData.type) + "|";
+    str += "Datasets: " + g_config.queryData.R.nickname + "," + g_config.queryData.S.nickname + "|";
+    // str += "Pipeline: " + mbrFilterTypeIntToText(g_config.pipeline.MBRFilterType) + "->" + iFilterTypeIntToText(g_config.pipeline.iFilterType) + "->Refinement\n";
+    str += "Pipeline: " + pipelineSettingIntToText(g_config.pipeline.setting) + "\n";
     return str;
 }
 
@@ -522,20 +534,30 @@ static void loadDataset(std::string &filepath, bool left) {
             maxXmbr = std::max(maxXmbr, x);
             minYmbr = std::min(minYmbr, y);
             maxYmbr = std::max(maxYmbr, y);
-            
-            // if (recID == 4320271 || recID == 5510423) {
+
+            // if (recID == 206434) {
+            //     printf("(%f,%f),",x,y);
+            // }
+            // if (recID == 206434 || recID == 9173759 || recID == 220594 || recID == 357429) {
             //     printf("(%f,%f),",x,y);
             // }
         }
         
-        // if (recID == 4320271 || recID == 5510423) {
+        // if (recID == 206434) {
+        //     printf("\n^ polygon %u\n\n", recID);    
+        // }
+        // if (recID == 206434 || recID == 9173759 || recID == 220594 || recID == 357429) {
         //     printf("\n^ polygon %u\n\n", recID);    
         // }
 
+        // if (recID == 1252559 || recID == 313074) {
+        //     printf("Pol %u has vertices: %u\n\n", recID, vertexCount);    
+        // }
+        
         // MBR
-        // if (recID == 672181 || recID == 3913769) {
+        // if (recID == 95697 || recID == 113621) {
         //     printf("(%f,%f),(%f,%f),(%f,%f),(%f,%f)",minXmbr,minYmbr,maxXmbr,minYmbr,maxXmbr,maxYmbr,minXmbr,maxYmbr);
-        //     printf("\n\n");    
+        //     printf("\n^ polygon %u\n\n", recID); 
         // }
         // add to relation for the MBR filter
         two_layer::addObjectToDataset(left, recID, minXmbr, minYmbr, maxXmbr, maxYmbr);
